@@ -16,21 +16,35 @@ export const Login = async (req, res) => {
   const name = user.name;
   const email = user.email;
   const role = user.role;
-  res.status(200).json({ uuid, name, email, role });
+  const image = user.image;
+  const url = user.url;
+  res.status(200).json({ uuid, name, email, role, image, url });
 };
+
+//
 
 export const Me = async (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ msg: "Mohon Login ke Akun Anda" });
   }
-  const user = await User.findOne({
-    attributes: ["uuid", "name", "email", "role"],
-    where: {
-      uuid: req.session.userId,
-    },
-  });
-  if (!user) return res.status(404).json({ msg: "User Tidak ditemukan" });
-  res.status(200).json(user);
+
+  try {
+    const user = await User.findOne({
+      attributes: ["uuid", "name", "email", "role", "image"],
+      where: {
+        uuid: req.session.userId,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ msg: "User Tidak ditemukan" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ msg: "Terjadi kesalahan pada server" });
+  }
 };
 
 export const Logout = (req, res) => {
