@@ -29,6 +29,24 @@ export const GetUsersById = async (req, res) => {
   }
 };
 
+export const GetUsersByRole = async (req, res) => {
+  try {
+    const response = await UserModel.findOne({
+      attributes: ["uuid", "name", "email", "role", "image", "url_foto_absen"],
+      where: {
+        role: req.params.role,
+      },
+    });
+    if (response.length === 0)
+      return res
+        .status(404)
+        .json({ msg: "Tidak ada pengguna dengan role ini" });
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+};
+
 export const CreateUser = async (req, res) => {
   const { name, email, password, confPassword, role } = req.body;
   if (password !== confPassword)
@@ -66,7 +84,7 @@ export const CreateUser = async (req, res) => {
         image: fileName,
         url,
       });
-      res.status(201).json({ msg: "Update Berhasil" });
+      res.status(201).json({ msg: "Register Berhasil" });
     } catch (error) {
       res.status(400).json({ msg: error.message });
     }
@@ -137,7 +155,7 @@ export const UpdateUser = async (req, res) => {
         },
       }
     );
-    res.status(201).json({ msg: "Register Berhasil" });
+    res.status(201).json({ msg: "Update Berhasil" });
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
@@ -161,6 +179,54 @@ export const DeleteUser = async (req, res) => {
     res
       .status(200)
       .json({ msg: `Berhasil Delete Data Dengan Username ${user.name}` });
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
+
+export const UpdateForFotoAbsen = async (req, res) => {
+  const user = await UserModel.findOne({
+    where: {
+      uuid: req.params.id,
+    },
+  });
+  if (!user) return res.status(404).json({ msg: "User Tidak di Temukan" });
+  let fileName;
+  if (req.files == null) {
+    fileName = user.foto_absen;
+  } else {
+    const file = req.files.file;
+    const fileSize = file.data.length;
+    const ext = path.extname(file.name);
+    fileName = file.md5 + ext;
+    const allowedType = [".png", ".jpg", ".jpeg"];
+
+    if (!allowedType.includes(ext.toLowerCase()))
+      return res.status(422).json({ msg: "Invalid Images" });
+    if (fileSize > 5000000)
+      return res.status(422).json({ msg: "Image must be less than 5 MB" });
+
+    file.mv(`./public/absen/${fileName}`, (err) => {
+      if (err) return res.status(500).json({ msg: err.message });
+    });
+  }
+  const url_foto_absen = `${req.protocol}://${req.get(
+    "host"
+  )}/images/${fileName}`;
+
+  try {
+    await UserModel.update(
+      {
+        foto_absen: fileName,
+        url_foto_absen,
+      },
+      {
+        where: {
+          uuid: req.params.id,
+        },
+      }
+    );
+    res.status(201).json({ msg: "Update Berhasil" });
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }

@@ -7,7 +7,7 @@ const Users = db.define(
   "users",
   {
     uuid: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       allowNull: false,
       validate: {
@@ -46,6 +46,14 @@ const Users = db.define(
     },
     image: DataTypes.STRING,
     url: DataTypes.STRING,
+    foto_absen: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    url_foto_absen: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   {
     freezeTableName: true,
