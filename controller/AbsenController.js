@@ -1,5 +1,3 @@
-import AbsenModel from "../models/AbsenModel";
+import Absen from "../models/Absen.js";
 
-export const GetAbsens = async(req, res) => {
-
-}
+export const GetAbsens = async (req, res) => {};

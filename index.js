@@ -5,7 +5,7 @@ import FileUpload from "express-fileupload";
 import session from "express-session";
 import SequelizeStore from "connect-session-sequelize";
 import UserRoute from "./routes/UserRoute.js";
-import AbsenRoute from "./routes/UserRoute.js";
+import AbsenRoute from "./routes/AbsenRoute.js";
 import AuthRoute from "./routes/AuthRoute.js";
 import dotenv from "dotenv";
 dotenv.config();
@@ -17,9 +17,9 @@ const sessionStore = SequelizeStore(session.Store);
 const store = new sessionStore({
   db: db,
 });
-// (async () => {
-//   await db.sync();
-// })();
+(async () => {
+  await db.sync();
+})();
 
 app.use(
   session({
@@ -51,4 +51,4 @@ store.sync();
 
 app.listen(process.env.APP_PORT, () => {
   console.log("Server up and Running....");
-});             
+});
