@@ -31,7 +31,7 @@ export const GetUsersById = async (req, res) => {
 
 export const GetUsersByRole = async (req, res) => {
   try {
-    const response = await UserModel.findOne({
+    const response = await UserModel.findAll({
       attributes: ["uuid", "name", "email", "role", "image", "url_foto_absen"],
       where: {
         role: req.params.role,
