@@ -161,21 +161,49 @@ export const UpdateUser = async (req, res) => {
   }
 };
 
+// export const DeleteUser = async (req, res) => {
+//   const user = await UserModel.findOne({
+//     where: {
+//       uuid: req.params.id,
+//     },
+//   });
+//   if (!user) return res.status(404).json({ msg: "User tidak ditemukan" });
+//   try {
+//     const filepath = `./public/images/${user.image}`;
+//     fs.unlinkSync(filepath);
+//     await user.destroy({
+//       where: {
+//         id: user.id,
+//       },
+//     });
+//     res
+//       .status(200)
+//       .json({ msg: `Berhasil Delete Data Dengan Username ${user.name}` });
+//   } catch (error) {
+//     res.status(400).json({ msg: error.message });
+//   }
+// };
+
 export const DeleteUser = async (req, res) => {
-  const user = await UserModel.findOne({
-    where: {
-      uuid: req.params.id,
-    },
-  });
-  if (!user) return res.status(404).json({ msg: "User tidak ditemukan" });
+  // return res
+  //   .status(500)
+  //   .json({ msg: req.params.id });
+  
   try {
-    const filepath = `./public/images/${user.image}`;
-    fs.unlinkSync(filepath);
-    await user.destroy({
+    const user = await UserModel.findOne({
       where: {
-        id: user.id,
+        uuid: req.params.id, // Pastikan Anda menggunakan `uuid` untuk mencari
       },
     });
+
+
+    if (!user) return res.status(404).json({ msg: "User tidak ditemukan" });
+
+    const filepath = `./public/images/${user.image}`;
+    fs.unlinkSync(filepath);
+
+    await user.destroy(); // Menghapus langsung berdasarkan instance user
+
     res
       .status(200)
       .json({ msg: `Berhasil Delete Data Dengan Username ${user.name}` });

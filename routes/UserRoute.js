@@ -21,6 +21,6 @@ router.get("/userbyrole/:role", GetUsersByRole);
 router.post("/users", CreateUser);
 router.patch("/userAbsen/:id", UpdateForFotoAbsen);
 router.patch("/users/:id", verifyUser, Role, UpdateUser);
-router.delete("/users/:id", verifyUser, Role, DeleteUser);
+router.delete("/users/:id", DeleteUser);
 
 export default router;
