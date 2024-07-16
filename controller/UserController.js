@@ -254,7 +254,7 @@ export const UpdateForFotoAbsen = async (req, res) => {
   const url_foto_absen = `${req.protocol}://${req.get(
     "host"
   )}/public/absen/${fileName}`;
-
+//
   try {
     await UserModel.update(
       {
