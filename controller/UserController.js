@@ -149,7 +149,7 @@ export const UpdateUser = async (req, res) => {
       .status(400)
       .json({ msg: "Password Dan Confirm Password Tidak Cocok" });
 
-  // Jika cocok maka langsung masukan ke database dengan method update
+  // Jika cocok maka langsung masukan ke database dengan method updatee
   try {
     await UserModel.update(
       {
@@ -253,8 +253,8 @@ export const UpdateForFotoAbsen = async (req, res) => {
   }
   const url_foto_absen = `${req.protocol}://${req.get(
     "host"
-  )}/public/absen/${fileName}`;
-//
+  )}/absen/${fileName}`;
+
   try {
     await UserModel.update(
       {
