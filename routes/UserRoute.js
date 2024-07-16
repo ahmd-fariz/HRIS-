@@ -2,6 +2,7 @@ import express from "express";
 import {
   CreateUser,
   DeleteUser,
+  GetUserFotoAbsen,
   GetUsers,
   GetUsersById,
   GetUsersByRole,
@@ -13,6 +14,7 @@ import { verifyUser, Role } from "../middleware/AuthUser.js";
 const router = express.Router();
 
 router.get("/users", verifyUser, Role, GetUsers);
+router.get("/userfotoabsen", GetUserFotoAbsen);
 router.get("/users/:id", verifyUser, Role, GetUsersById);
 //router.get("/userbyrole/:role", verifyUser, Role, GetUsersById);
 // router.get("/userbyrole/:role", verifyUser, Role, GetUsersByRole);

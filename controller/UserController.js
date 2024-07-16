@@ -15,6 +15,17 @@ export const GetUsers = async (req, res) => {
   }
 };
 
+export const GetUserFotoAbsen = async (req, res) => {
+  try {
+    const response = await UserModel.findAll({
+      attributes: ["url_foto_absen"],
+    });
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+};
+
 export const GetUsersById = async (req, res) => {
   try {
     const response = await UserModel.findOne({
@@ -188,7 +199,7 @@ export const DeleteUser = async (req, res) => {
   // return res
   //   .status(500)
   //   .json({ msg: req.params.id });
-  
+
   try {
     const user = await UserModel.findOne({
       where: {
@@ -196,11 +207,13 @@ export const DeleteUser = async (req, res) => {
       },
     });
 
-
     if (!user) return res.status(404).json({ msg: "User tidak ditemukan" });
 
     const filepath = `./public/images/${user.image}`;
     fs.unlinkSync(filepath);
+
+    const filepath2 = `./public/absen/${user.foto_absen}`;
+    fs.unlinkSync(filepath2);
 
     await user.destroy(); // Menghapus langsung berdasarkan instance user
 
@@ -240,7 +253,7 @@ export const UpdateForFotoAbsen = async (req, res) => {
   }
   const url_foto_absen = `${req.protocol}://${req.get(
     "host"
-  )}/images/${fileName}`;
+  )}/public/absen/${fileName}`;
 
   try {
     await UserModel.update(
