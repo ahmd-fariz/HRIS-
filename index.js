@@ -43,6 +43,7 @@ app.use(
 app.use(express.json());
 app.use(FileUpload());
 app.use(express.static("public"));
+app.use(express.static("public/absen"));
 app.use(UserRoute);
 app.use(AbsenRoute);
 app.use(AuthRoute);
