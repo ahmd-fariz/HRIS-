@@ -212,8 +212,8 @@ export const DeleteUser = async (req, res) => {
     const filepath = `./public/images/${user.image}`;
     fs.unlinkSync(filepath);
 
-    const filepath2 = `./public/absen/${user.foto_absen}`;
-    fs.unlinkSync(filepath2);
+    // const filepath2 = `./public/absen/${user.foto_absen}`;
+    // fs.unlinkSync(filepath2);
 
     await user.destroy(); // Menghapus langsung berdasarkan instance user
 
