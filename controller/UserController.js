@@ -29,7 +29,14 @@ export const GetUserFotoAbsen = async (req, res) => {
 export const GetUsersById = async (req, res) => {
   try {
     const response = await UserModel.findOne({
-      attributes: ["uuid", "name", "email", "role", "image"],
+      attributes: [
+        "uuid",
+        "name",
+        "email",
+        "password",
+        "role",
+        "url",
+      ],
       where: {
         uuid: req.params.id,
       },
@@ -135,19 +142,20 @@ export const UpdateUser = async (req, res) => {
   }
   const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
 
-  // pengecekan user memasukan password baru atau tidak
-  if (password === "" || password === null) {
+  if (password === user.password) {
     hashPassword = user.password;
   } else {
+    
+    // pengecekan password nya sama atau tidak dengan confPassword
+    if (password !== confPassword)
+      // Jika tidak sama maka muncul respon 400 dengan pesan password dan confirm password tidak cocok
+      return res
+        .status(400)
+        .json({ msg: "Password Dan Confirm Password Tidak Cocok" });
+
     hashPassword = await argon2.hash(password);
   }
-
-  // pengecekan password nya sama atau tidak dengan confPassword
-  if (password !== confPassword)
-    // Jika tidak sama maka muncul respon 400 dengan pesan password dan confirm password tidak cocok
-    return res
-      .status(400)
-      .json({ msg: "Password Dan Confirm Password Tidak Cocok" });
+  
 
   // Jika cocok maka langsung masukan ke database dengan method updatee
   try {
