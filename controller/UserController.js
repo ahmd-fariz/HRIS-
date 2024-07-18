@@ -26,6 +26,54 @@ export const GetUserFotoAbsen = async (req, res) => {
   }
 };
 
+export const UpdatePotoProfile = async (req, res) => {
+  const user = await UserModel.findOne({
+    where: {
+      uuid: req.params.id,
+    },
+  });
+  if (!user) return res.status(404).json({ msg: "User Tidak di Temukan" });
+  let fileName;
+  if (req.files == null) {
+    fileName = user.image;
+  } else {
+    const file = req.files.file;
+    const fileSize = file.data.length;
+    const ext = path.extname(file.name);
+    fileName = file.md5 + ext;
+    const allowedType = [".png", ".jpg", ".jpeg"];
+
+    if (!allowedType.includes(ext.toLowerCase()))
+      return res.status(422).json({ msg: "Invalid Images" });
+    if (fileSize > 5000000)
+      return res.status(422).json({ msg: "Image must be less than 5 MB" });
+
+    const filepath = `./public/images/${user.image}`;
+    fs.unlinkSync(filepath);
+
+    file.mv(`./public/images/${fileName}`, (err) => {
+      if (err) return res.status(500).json({ msg: err.message });
+    });
+  }
+  const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
+  try {
+    await UserModel.update(
+      {
+        image: fileName,
+        url,
+      },
+      {
+        where: {
+          id: user.id,
+        },
+      }
+    );
+    res.status(201).json({ msg: "Update Foto Berhasil" });
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
+
 export const GetUsersById = async (req, res) => {
   try {
     const response = await UserModel.findOne({
