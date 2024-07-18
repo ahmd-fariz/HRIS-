@@ -18,7 +18,7 @@ export const GetUsers = async (req, res) => {
 export const GetUserFotoAbsen = async (req, res) => {
   try {
     const response = await UserModel.findAll({
-      attributes: ["uuid", "url_foto_absen", "name"],
+      attributes: ["id", "url_foto_absen", "name"],
     });
     res.status(200).json(response);
   } catch (error) {

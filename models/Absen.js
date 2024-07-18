@@ -14,36 +14,29 @@ const Absen = db.define(
     tanggal: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     waktu_datang: {
-      type: DataTypes.DATE,
+      type: DataTypes.TIME,
       allowNull: false,
-      defaultValue: DataTypes.NOW,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     waktu_keluar: {
       type: DataTypes.DATE,
       allowNull: true,
     },
-    lokasi: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
     lat: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     long: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
-    alamat: {
-      type: DataTypes.STRING,
+    keterangan: {
+      type: DataTypes.ENUM('Hadir', 'Izin', 'Sakit', 'Absen di Luar', 'Alpha'),
       allowNull: false,
-    },
-    detail_alamat: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      defaultValue: 'Hadir',
     },
   },
   {
@@ -51,7 +44,7 @@ const Absen = db.define(
   }
 );
 
-UserModel.hasMany(Absen);
-Absen.belongsTo(UserModel);
+UserModel.hasMany(Absen, { foreignKey: 'userId' });
+Absen.belongsTo(UserModel, { foreignKey: 'userId' });
 
 export default Absen;
