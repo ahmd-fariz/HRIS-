@@ -18,7 +18,7 @@ export const GetUsers = async (req, res) => {
 export const GetUserFotoAbsen = async (req, res) => {
   try {
     const response = await UserModel.findAll({
-      attributes: ["url_foto_absen", "name"],
+      attributes: ["uuid", "url_foto_absen", "name"],
     });
     res.status(200).json(response);
   } catch (error) {
@@ -29,14 +29,7 @@ export const GetUserFotoAbsen = async (req, res) => {
 export const GetUsersById = async (req, res) => {
   try {
     const response = await UserModel.findOne({
-      attributes: [
-        "uuid",
-        "name",
-        "email",
-        "password",
-        "role",
-        "url",
-      ],
+      attributes: ["uuid", "name", "email", "password", "role", "url"],
       where: {
         uuid: req.params.id,
       },
@@ -145,7 +138,6 @@ export const UpdateUser = async (req, res) => {
   if (password === user.password) {
     hashPassword = user.password;
   } else {
-    
     // pengecekan password nya sama atau tidak dengan confPassword
     if (password !== confPassword)
       // Jika tidak sama maka muncul respon 400 dengan pesan password dan confirm password tidak cocok
@@ -155,7 +147,6 @@ export const UpdateUser = async (req, res) => {
 
     hashPassword = await argon2.hash(password);
   }
-  
 
   // Jika cocok maka langsung masukan ke database dengan method updatee
   try {
