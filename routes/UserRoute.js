@@ -17,7 +17,7 @@ const router = express.Router();
 router.get("/users", GetUsers);
 router.get("/userfotoabsen", GetUserFotoAbsen);
 router.get("/users/:id", GetUsersById);
-router.post("/userfotoprofile/:id", UpdatePotoProfile);
+router.patch("/userfotoprofile/:id", UpdatePotoProfile);
 //router.get("/userbyrole/:role", verifyUser, Role, GetUsersById);
 // router.get("/userbyrole/:role", verifyUser, Role, GetUsersByRole);
 router.get("/userbyrole/:role", GetUsersByRole);
