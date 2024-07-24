@@ -7,6 +7,12 @@ const { DataTypes } = Sequelize;
 const Absen = db.define(
   "absen",
   {
+    id: {
+      // Mendefinisikan kolom id sebagai primary key dan auto-increment
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -19,7 +25,7 @@ const Absen = db.define(
     waktu_datang: {
       type: DataTypes.TIME,
       allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+     // defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     waktu_keluar: {
       type: DataTypes.DATE,
