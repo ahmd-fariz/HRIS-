@@ -7,6 +7,6 @@ import {
 const router = express.Router();
 
 router.get("/absens", GetAbsens);
-router.get("/absen", createAbsen);
+router.post("/absen", createAbsen);
 
 export default router;

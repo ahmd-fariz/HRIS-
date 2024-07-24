@@ -1,25 +1,53 @@
 import Absen from "../models/Absen.js";
+import UserModel from "../models/UserModel.js";
 
-export const GetAbsens = async (req, res) => {};
-
-export const createAbsen = async (req, res) => {
+// Fungsi untuk mendapatkan semua data absen
+export const GetAbsens = async (req, res) => {
   try {
-    const { userId } = req.body;
+    // Mengambil semua data absen termasuk nama dan peran pengguna yang terkait
+    const response = await Absen.findAll({
+      include: {
+        model: UserModel,
+        attributes: ["name", "role"],
+      },
+      attributes: ["userId", "tanggal", "waktu_datang", "keterangan"],
+    });
 
-    if (!userId) {
-      return res.status(400).json({ error: "User ID is required" });
-    }
+    // Mengirimkan respons sukses dengan data absen
+    res.status(200).json(response);
+  } catch (error) {
+    // Menangani kesalahan dan mengirimkan respons dengan status 500
+    res.status(500).json({ msg: error.message });
+  }
+};
 
-    const newAbsen = await Absen.create({
+// Fungsi untuk membuat data absen baru
+export const createAbsen = async (req, res) => {
+  const { userId } = req.body;
+
+  console.log("Request received to create absen for userId:", userId);
+
+  // Mendapatkan tanggal dan waktu saat ini
+  const today = new Date();
+  const date = today.toISOString().split("T")[0]; // Mendapatkan tanggal hari ini dalam format YYYY-MM-DD
+  const waktu_datang = today.toLocaleTimeString(); // Mendapatkan waktu saat ini dalam format jam:menit:detik AM/PM
+
+  try {
+    // Membuat data absen baru di database
+    const absen = await Absen.create({
       userId,
-      tanggal: new Date(), // Tanggal hari ini
-      waktuDatang: new Date(), // Waktu datang saat ini
+      tanggal: date,
+      waktu_datang,
       keterangan: "Hadir",
     });
 
-    res.status(201).json(newAbsen);
+    console.log("Absen created:", absen);
+
+    // Mengirimkan respons sukses dengan data absen yang baru dibuat
+    res.status(201).json({ msg: "Absen berhasil dibuat", absen });
   } catch (error) {
     console.error("Error creating absen:", error);
-    res.status(500).json({ error: "An error occurred while creating absen" });
+    // Menangani kesalahan dan mengirimkan respons dengan status 500
+    res.status(500).json({ msg: error.message });
   }
 };
