@@ -10,7 +10,13 @@ export const GetAbsens = async (req, res) => {
         model: UserModel,
         attributes: ["name", "role"],
       },
-      attributes: ["userId", "tanggal", "waktu_datang", "keterangan"],
+      attributes: [
+        "userId",
+        "tanggal",
+        "waktu_datang",
+        "waktu_keluar",
+        "keterangan",
+      ],
     });
 
     // Mengirimkan respons sukses dengan data absen
@@ -30,7 +36,7 @@ export const createAbsen = async (req, res) => {
   // Mendapatkan tanggal dan waktu saat ini
   const today = new Date();
   const date = today.toISOString().split("T")[0]; // Mendapatkan tanggal hari ini dalam format YYYY-MM-DD
-  const waktu_datang = today.toLocaleTimeString(); // Mendapatkan waktu saat ini dalam format jam:menit:detik AM/PM
+  const waktu_datang = today.toLocaleTimeString("en-GB"); // Menggunakan en-GB untuk format 24 jam
 
   try {
     // Membuat data absen baru di database
@@ -47,6 +53,39 @@ export const createAbsen = async (req, res) => {
     res.status(201).json({ msg: "Absen berhasil dibuat", absen });
   } catch (error) {
     console.error("Error creating absen:", error);
+    // Menangani kesalahan dan mengirimkan respons dengan status 500
+    res.status(500).json({ msg: error.message });
+  }
+};
+
+export const AbsenKeluar = async (req, res) => {
+  const { userId } = req.body;
+
+  console.log("Request received to update absen for userId:", userId);
+
+  // Mendapatkan tanggal dan waktu saat ini
+  const today = new Date();
+  const date = today.toISOString().split("T")[0]; // Mendapatkan tanggal hari ini dalam format YYYY-MM-DD
+  const waktu_keluar = today.toLocaleTimeString("en-GB"); // Menggunakan en-GB untuk format 24 jam
+
+  try {
+    // Mengupdate data absen di database
+    const absen = await Absen.update(
+      { waktu_keluar: waktu_keluar },
+      {
+        where: {
+          userId,
+          tanggal: date,
+        },
+      }
+    );
+
+    console.log("Absen Pulang:", absen);
+
+    // Mengirimkan respons sukses dengan data absen yang baru diupdate
+    res.status(200).json({ msg: "Berhasil Pulang", absen });
+  } catch (error) {
+    console.error("Error updating absen:", error);
     // Menangani kesalahan dan mengirimkan respons dengan status 500
     res.status(500).json({ msg: error.message });
   }
