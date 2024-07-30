@@ -7,7 +7,7 @@ import argon2 from "argon2"; // Mengimpor argon2 untuk hashing password
 export const GetUsers = async (req, res) => {
   try {
     const response = await UserModel.findAll({
-      attributes: ["id", "name", "email", "role", "image"], // Mengambil atribut id, name, email, role, dan image dari model UserModel
+      attributes: ["id", "name", "email", "role", "url"], // Mengambil atribut id, name, email, role, dan image dari model UserModel
     });
     res.status(200).json(response); // Mengirimkan respon dengan status 200 dan data pengguna dalam format JSON
   } catch (error) {
