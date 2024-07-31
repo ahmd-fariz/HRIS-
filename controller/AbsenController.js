@@ -32,6 +32,7 @@ export const GetAbsens = async (req, res) => {
 // Fungsi untuk membuat data absen baru
 export const createAbsen = async (req, res) => {
   const { userId } = req.body;
+  const { lat, long } = req.body;
 
   console.log("Request received to create absen for userId:", userId);
 
@@ -45,6 +46,8 @@ export const createAbsen = async (req, res) => {
     const absen = await Absen.create({
       userId,
       tanggal: date,
+      lat: lat,
+      long: long,
       waktu_datang,
       keterangan: "Hadir",
     });
