@@ -18,7 +18,7 @@ const Absen = db.define(
       allowNull: false,
     },
     tanggal: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
     },
     waktu_datang: {
@@ -27,16 +27,16 @@ const Absen = db.define(
      // defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     waktu_keluar: {
-      type: DataTypes.DATE,
+      type: DataTypes.TIME,
       allowNull: true,
     },
     lat: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
     long: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
     keterangan: {
       type: DataTypes.ENUM('Hadir', 'Izin', 'Sakit', 'Absen di Luar', 'Alpha'),

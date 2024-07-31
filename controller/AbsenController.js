@@ -81,6 +81,7 @@ export const AbsenKeluar = async (req, res) => {
         where: {
           userId,
           tanggal: date,
+          
         },
       }
     );
