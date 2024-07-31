@@ -16,6 +16,8 @@ export const GetAbsens = async (req, res) => {
         "waktu_datang",
         "waktu_keluar",
         "keterangan",
+        "lat",
+        "long",
       ],
     });
 
@@ -87,6 +89,42 @@ export const AbsenKeluar = async (req, res) => {
   } catch (error) {
     console.error("Error updating absen:", error);
     // Menangani kesalahan dan mengirimkan respons dengan status 500
+    res.status(500).json({ msg: error.message });
+  }
+};
+
+export const GeoLocation = async (req, res) => {
+  const { userId } = req.body;
+
+  console.log("Request received to update absen for userId:", userId);
+  const { lat, long } = req.body;
+
+  // Mendapatkan tanggal dan waktu saat ini
+  const today = new Date();
+  const date = today.toISOString().split("T")[0]; // Mendapatkan tanggal hari ini dalam format YYYY-MM-DD
+  const waktu_datang = today.toLocaleTimeString("en-GB"); // Menggunakan en-GB untuk format 24 jam
+
+  try {
+    const absen = await Absen.create(
+      {
+        userId,
+        tanggal: date,
+        lat: lat,
+        long: long,
+        waktu_datang,
+        keterangan: "Hadir",
+      },
+      {
+        where: {
+          userId,
+          tanggal: date,
+        },
+      }
+    );
+    console.log("Absen Geolocation:", absen);
+    res.status(200).json({ msg: "Berhasil Update Geolocation", absen });
+  } catch (error) {
+    console.error("Error updating absen:", error);
     res.status(500).json({ msg: error.message });
   }
 };
