@@ -38,11 +38,24 @@ const Absen = db.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    // Input foto, besok ajalah
+    // foto: {
+    //   type: DataTypes.STRING,
+    //   allowNull: true,
+    // },
+    // url_foto: {
+    //   type: DataTypes.STRING,
+    //   allowNull: true,
+    // },
     keterangan: {
       type: DataTypes.ENUM('Hadir', 'Izin', 'Sakit', 'Absen di Luar', 'Alpha'),
       allowNull: false,
       defaultValue: 'Hadir',
     },
+    // alasan: {
+    //   type: DataTypes.STRING,
+    //   allowNull: true,
+    // },
   },
   {
     freezeTableName: true,
