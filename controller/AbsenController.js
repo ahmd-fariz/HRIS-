@@ -68,7 +68,7 @@ export const createAbsen = async (req, res) => {
 
 // Fungsi untuk mengupdate waktu keluar absen
 export const AbsenKeluar = async (req, res) => {
-  const { userId } = req.body;
+  const { userId, reason } = req.body;
 
   console.log("Request received to update absen for userId:", userId);
 
@@ -78,7 +78,7 @@ export const AbsenKeluar = async (req, res) => {
 
   try {
     const absen = await Absen.update(
-      { waktu_keluar },
+      { waktu_keluar, alasan: reason },
       {
         where: {
           userId,
@@ -95,6 +95,7 @@ export const AbsenKeluar = async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 };
+
 
 // Fungsi untuk mengupdate geolocation absen
 export const GeoLocation = async (req, res) => {
