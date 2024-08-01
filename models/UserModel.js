@@ -1,5 +1,6 @@
 import { Sequelize } from "sequelize";
 import db from "../config/Database.js";
+import Role from "./Role.js";
 
 const { DataTypes } = Sequelize;
 
@@ -39,13 +40,10 @@ const Users = db.define(
         notEmpty: true,
       },
     },
-    role: {
+    roleId: {
       // Mendefinisikan kolom role dengan validasi tidak boleh kosong
-      type: DataTypes.STRING,
+      type: DataTypes.INTEGER,
       allowNull: true,
-      validate: {
-        notEmpty: true,
-      },
     },
     image: {
       // Mendefinisikan kolom image tanpa validasi tambahan
@@ -71,5 +69,8 @@ const Users = db.define(
     freezeTableName: true,
   }
 );
+
+Users.belongsTo(Role, { foreignKey: "roleId" });
+Role.hasMany(Users, { foreignKey: "roleId" });
 
 export default Users;
