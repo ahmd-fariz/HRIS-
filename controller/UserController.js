@@ -124,7 +124,7 @@ export const GetUsersByRole = async (req, res) => {
       include: [
         {
           model: RoleModel,
-          attributes: ["name_role", "jam_pulang", "denda_telat"], // Mengambil atribut name dari model RoleModel
+          attributes: ["nama_role", "jam_pulang", "denda_telat"], // Mengambil atribut name dari model RoleModel
         },
       ],
     });

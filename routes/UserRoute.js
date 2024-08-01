@@ -20,7 +20,7 @@ router.get("/users/:id", GetUsersById);
 router.patch("/userfotoprofile/:id", UpdatePotoProfile);
 //router.get("/userbyrole/:role", verifyUser, Role, GetUsersById);
 // router.get("/userbyrole/:role", verifyUser, Role, GetUsersByRole);
-router.get("/userbyrole/:role", GetUsersByRole);
+router.get("/userbyrole/:roleId", GetUsersByRole);
 // router.post("/users", Role, CreateUser);
 router.post("/users", CreateUser);
 router.patch("/userAbsen/:id", UpdateForFotoAbsen);
