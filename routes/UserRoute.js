@@ -14,17 +14,17 @@ import { verifyUser, Role } from "../middleware/AuthUser.js";
 
 const router = express.Router();
 
-router.get("/users", verifyUser, Role, GetUsers);
-router.get("/userfotoabsen", verifyUser, Role, GetUserFotoAbsen);
-router.get("/users/:id", verifyUser, Role, GetUsersById);
-router.patch("/userfotoprofile/:id", verifyUser, Role, UpdatePotoProfile);
+router.get("/users", GetUsers);
+router.get("/userfotoabsen", GetUserFotoAbsen);
+router.get("/users/:id", GetUsersById);
+router.patch("/userfotoprofile/:id", UpdatePotoProfile);
 //router.get("/userbyrole/:role", verifyUser, Role, GetUsersById);
 // router.get("/userbyrole/:role", verifyUser, Role, GetUsersByRole);
-router.get("/userbyrole/:roleId", verifyUser, Role, GetUsersByRole);
+router.get("/userbyrole/:roleId", GetUsersByRole);
 // router.post("/users", Role, CreateUser);
-router.post("/users", verifyUser, Role, CreateUser);
-router.patch("/userAbsen/:id", verifyUser, Role, UpdateForFotoAbsen);
-router.patch("/updateuser/:id", verifyUser, Role, UpdateUser);
-router.delete("/users/:id", verifyUser, Role, DeleteUser);
+router.post("/users", CreateUser);
+router.patch("/userAbsen/:id", UpdateForFotoAbsen);
+router.patch("/updateuser/:id", UpdateUser);
+router.delete("/users/:id", DeleteUser);
 
 export default router;

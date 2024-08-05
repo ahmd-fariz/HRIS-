@@ -5,11 +5,10 @@ import {
   AbsenKeluar,
   GeoLocation,
 } from "../controller/AbsenController.js";
-import { verifyUser, Role } from "../middleware/AuthUser.js";
 
 const router = express.Router();
 
-router.get("/absens", verifyUser, Role, GetAbsens);
+router.get("/absens", GetAbsens);
 router.post("/absen", createAbsen);
 router.patch("/absen/:id", AbsenKeluar);
 router.post("/absen/geolocation", GeoLocation);
