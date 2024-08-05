@@ -20,9 +20,9 @@ const store = new sessionStore({
   db: db, // Menghubungkan session store dengan database
 });
 
-// (async () => {
-//   await db.sync();
-// })();
+(async () => {
+  await db.sync();
+})();
 
 // Konfigurasi middleware session
 app.use(
@@ -41,7 +41,7 @@ app.use(
 app.use(
   cors({
     credentials: true, // Mengizinkan pengiriman kredensial seperti cookie
-    origin: "http://localhost:3000", // Mengizinkan akses hanya dari origin ini
+    origin: ["http://localhost:3000", "http://192.168.30.15:3000"], // Mengizinkan akses dari kedua origin ini
   })
 );
 
@@ -59,6 +59,6 @@ app.use(RoleRoute); // Rute untuk role
 
 store.sync(); // Menyinkronkan tabel session dengan database
 
-app.listen(process.env.APP_PORT, () => {
+app.listen(process.env.APP_PORT, "0.0.0.0", () => {
   console.log("Server up and Running...."); // Menjalankan server pada port yang ditentukan
 });

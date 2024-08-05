@@ -5,6 +5,8 @@ import argon2 from "argon2";
 // Fungsi untuk login pengguna
 export const Login = async (req, res) => {
   try {
+    console.log("Request body:", req.body); // Log request body
+
     // Mencari pengguna berdasarkan email
     const user = await User.findOne({
       where: {
@@ -13,13 +15,19 @@ export const Login = async (req, res) => {
     });
 
     // Jika pengguna tidak ditemukan, kirim respons dengan status 404
-    if (!user) return res.status(404).json({ msg: "User Tidak ditemukan" });
+    if (!user) {
+      console.log("User not found"); // Log jika pengguna tidak ditemukan
+      return res.status(404).json({ msg: "User Tidak ditemukan" });
+    }
 
     // Memverifikasi password yang diinput dengan password yang ada di database
     const match = await argon2.verify(user.password, req.body.password);
 
     // Jika password tidak cocok, kirim respons dengan status 400
-    if (!match) return res.status(400).json({ msg: "Wrong Password" });
+    if (!match) {
+      console.log("Wrong password"); // Log jika password salah
+      return res.status(400).json({ msg: "Wrong Password" });
+    }
 
     // Menyimpan id pengguna di sesi
     req.session.userId = user.id;
@@ -31,7 +39,7 @@ export const Login = async (req, res) => {
     res.status(200).json({ id, name, email, role, image, url });
   } catch (error) {
     // Menangani kesalahan dan mengirim respons dengan status 500
-    console.error("Error logging in:", error);
+    console.error("Error logging in:", error); // Log kesalahan
     res.status(500).json({ msg: "Terjadi kesalahan pada server" });
   }
 };
