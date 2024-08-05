@@ -7,6 +7,8 @@ import SequelizeStore from "connect-session-sequelize";
 import UserRoute from "./routes/UserRoute.js";
 import AbsenRoute from "./routes/AbsenRoute.js";
 import AuthRoute from "./routes/AuthRoute.js";
+import SettingRoute from "./routes/SettingRoute.js";
+import RoleRoute from "./routes/RoleRoute.js";
 import dotenv from "dotenv";
 dotenv.config(); // Memuat variabel lingkungan dari file .env
 
@@ -18,9 +20,9 @@ const store = new sessionStore({
   db: db, // Menghubungkan session store dengan database
 });
 
-(async () => {
-  await db.sync();
-})();
+// (async () => {
+//   await db.sync();
+// })();
 
 // Konfigurasi middleware session
 app.use(
@@ -52,6 +54,8 @@ app.use(express.static("public/absen")); // Menyajikan file statis dari folder '
 app.use(UserRoute); // Rute untuk pengguna
 app.use(AbsenRoute); // Rute untuk absensi
 app.use(AuthRoute); // Rute untuk autentikasi
+app.use(SettingRoute); // Rute untuk setting
+app.use(RoleRoute); // Rute untuk role
 
 store.sync(); // Menyinkronkan tabel session dengan database
 

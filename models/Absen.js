@@ -18,9 +18,8 @@ const Absen = db.define(
       allowNull: false,
     },
     tanggal: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     waktu_datang: {
       type: DataTypes.TIME,
@@ -28,21 +27,34 @@ const Absen = db.define(
      // defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     waktu_keluar: {
-      type: DataTypes.DATE,
+      type: DataTypes.TIME,
       allowNull: true,
     },
     lat: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
     long: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    // Input foto, besok ajalah
+    foto: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    url_foto: {
       type: DataTypes.STRING,
       allowNull: true,
     },
     keterangan: {
-      type: DataTypes.ENUM('Hadir', 'Izin', 'Sakit', 'Absen di Luar', 'Alpha'),
+      type: DataTypes.ENUM('Hadir', 'Izin', 'Sakit', 'Alpha'),
       allowNull: false,
       defaultValue: 'Hadir',
+    },
+    alasan: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
   {

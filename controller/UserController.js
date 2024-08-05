@@ -1,4 +1,5 @@
 import UserModel from "../models/UserModel.js"; // Mengimpor model UserModel dari file models/UserModel.js
+import RoleModel from "../models/Role.js"; // Mengimpor model RoleModel dari file models/RoleModel.js
 import path from "path"; // Mengimpor modul path untuk manipulasi path file
 import fs from "fs"; // Mengimpor modul fs untuk operasi file system
 import argon2 from "argon2"; // Mengimpor argon2 untuk hashing password
@@ -7,7 +8,13 @@ import argon2 from "argon2"; // Mengimpor argon2 untuk hashing password
 export const GetUsers = async (req, res) => {
   try {
     const response = await UserModel.findAll({
-      attributes: ["id", "name", "email", "role", "image"], // Mengambil atribut id, name, email, role, dan image dari model UserModel
+      attributes: ["id", "name", "email", "roleId", "url"], // Mengambil atribut id, name, email, roleId, dan image dari model UserModel
+      include: [
+        {
+          model: RoleModel,
+          attributes: ["nama_role", "jam_pulang", "denda_telat"], // Mengambil atribut name dari model RoleModel
+        },
+      ],
     });
     res.status(200).json(response); // Mengirimkan respon dengan status 200 dan data pengguna dalam format JSON
   } catch (error) {
@@ -89,10 +96,16 @@ export const UpdatePotoProfile = async (req, res) => {
 export const GetUsersById = async (req, res) => {
   try {
     const response = await UserModel.findOne({
-      attributes: ["id", "name", "email", "password", "role", "url"], // Mengambil atribut id, name, email, password, role, dan url dari model UserModel
+      attributes: ["id", "name", "email", "password", "roleId", "url"], // Mengambil atribut id, name, email, password, roleId, dan url dari model UserModel
       where: {
         id: req.params.id, // Mencari pengguna berdasarkan id dari parameter route
       },
+      include: [
+        {
+          model: RoleModel,
+          attributes: ["name_role", "jam_pulang", "denda_telat"], // Mengambil atribut name dari model RoleModel
+        },
+      ],
     });
     res.status(200).json(response); // Mengirimkan respon dengan status 200 dan data pengguna dalam format JSON
   } catch (error) {
@@ -100,19 +113,25 @@ export const GetUsersById = async (req, res) => {
   }
 };
 
-// Fungsi untuk mendapatkan pengguna berdasarkan role
+// Fungsi untuk mendapatkan pengguna berdasarkan roleId
 export const GetUsersByRole = async (req, res) => {
   try {
     const response = await UserModel.findAll({
-      attributes: ["id", "name", "email", "role", "image", "url_foto_absen"], // Mengambil atribut id, name, email, role, image, dan url_foto_absen dari model UserModel
+      attributes: ["id", "name", "email", "roleId", "image", "url_foto_absen"], // Mengambil atribut id, name, email, roleId, image, dan url_foto_absen dari model UserModel
       where: {
-        role: req.params.role, // Mencari pengguna berdasarkan role dari parameter route
+        roleId: req.params.roleId, // Mencari pengguna berdasarkan roleId dari parameter route
       },
+      include: [
+        {
+          model: RoleModel,
+          attributes: ["nama_role", "jam_pulang", "denda_telat"], // Mengambil atribut name dari model RoleModel
+        },
+      ],
     });
     if (response.length === 0)
       return res
         .status(404)
-        .json({ msg: "Tidak ada pengguna dengan role ini" }); // Mengirimkan respon dengan status 404 jika tidak ada pengguna dengan role tersebut
+        .json({ msg: "Tidak ada pengguna dengan roleId ini" }); // Mengirimkan respon dengan status 404 jika tidak ada pengguna dengan roleId tersebut
     res.status(200).json(response); // Mengirimkan respon dengan status 200 dan data pengguna dalam format JSON
   } catch (error) {
     res.status(500).json({ msg: error.message }); // Mengirimkan respon dengan status 500 dan pesan error jika terjadi kesalahan
@@ -121,7 +140,7 @@ export const GetUsersByRole = async (req, res) => {
 
 // Fungsi untuk membuat pengguna baru
 export const CreateUser = async (req, res) => {
-  const { name, email, password, confPassword, role } = req.body;
+  const { name, email, password, confPassword, roleId } = req.body;
   if (password !== confPassword)
     return res
       .status(400)
@@ -153,7 +172,7 @@ export const CreateUser = async (req, res) => {
         name: name,
         email: email,
         password: hashPassword,
-        role: role,
+        roleId: roleId,
         image: fileName,
         url,
       });
@@ -174,7 +193,7 @@ export const UpdateUser = async (req, res) => {
 
   if (!user) return res.status(404).json({ msg: "User Tidak di Temukan" }); // Mengirimkan respon dengan status 404 jika pengguna tidak ditemukan
 
-  const { name, email, password, confPassword, role } = req.body;
+  const { name, email, password, confPassword, roleId } = req.body;
   let hashPassword = user.password; // Menggunakan password lama jika tidak ada perubahan
   let fileName = user.image; // Menggunakan nama file gambar lama jika tidak ada file baru
 
@@ -223,7 +242,7 @@ export const UpdateUser = async (req, res) => {
         name: name,
         email: email,
         password: hashPassword,
-        role: role,
+        roleId: roleId,
         image: fileName,
         url,
       },
