@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import Absen from "../models/Absen.js";
 import UserModel from "../models/UserModel.js";
+import Role from "../models/Role.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,7 +14,11 @@ export const GetAbsens = async (req, res) => {
     const response = await Absen.findAll({
       include: {
         model: UserModel,
-        attributes: ["name", "role"],
+        attributes: ["name", "roleId"],
+        include: {
+          model: Role,
+          attributes: ["nama_role"],
+        },
       },
       attributes: [
         "userId",
@@ -113,7 +118,6 @@ export const GeoLocation = async (req, res) => {
   const waktu_datang = today.toLocaleTimeString("en-GB");
 
   try {
-
     if (!req.file) {
       return res.status(400).json({ msg: "No file uploaded" }); // Mengirimkan respon dengan status 400 jika tidak ada file yang diunggah
     }
