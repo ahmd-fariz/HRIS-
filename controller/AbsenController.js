@@ -104,7 +104,7 @@ export const AbsenKeluar = async (req, res) => {
 
 // Fungsi untuk mengupdate geolocation absen
 export const GeoLocation = async (req, res) => {
-  const { userId, lat, long, keterangan, photo, alasan } = req.body;
+  const { userId, lat, long, keterangan, alasan } = req.body;
 
   console.log("Request received to update absen for userId:", userId);
 
@@ -118,9 +118,9 @@ export const GeoLocation = async (req, res) => {
       return res.status(400).json({ msg: "No file uploaded" }); // Mengirimkan respon dengan status 400 jika tidak ada file yang diunggah
     }
     // Mengecek apakah ada file yang diunggah
-    const file = req.file; // Mengambil file dari req.files
-    const fileSize = file.size; // Mengukur ukuran file
-    const ext = path.extname(file.name); // Mendapatkan ekstensi file
+    const photo = req.files.file; // Mengambil file dari req.files
+    const fileSize = file.data.lenght; // Mengukur ukuran file
+    const ext = path.extname(photo.name); // Mendapatkan ekstensi file
     const fileName = file.md5 + ext; // Membuat nama file baru berdasarkan hash MD5 dan ekstensi
     const allowedType = [".png", ".jpg", ".jpeg"]; // Daftar ekstensi file gambar yang diizinkan
 

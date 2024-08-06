@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import bodyParser from "body-parser";
 import db from "./config/Database.js";
 import FileUpload from "express-fileupload";
 import session from "express-session";
@@ -13,6 +14,9 @@ import dotenv from "dotenv";
 dotenv.config(); // Memuat variabel lingkungan dari file .env
 
 const app = express(); // Membuat aplikasi Express
+
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 const sessionStore = SequelizeStore(session.Store); // Mengonfigurasi session store untuk Sequelize
 
@@ -36,7 +40,6 @@ app.use(
     },
   })
 );
-
 // Konfigurasi middleware CORS
 app.use(
   cors({
@@ -50,6 +53,7 @@ app.use(FileUpload()); // Middleware untuk menangani upload file
 app.use(express.static("public")); // Menyajikan file statis dari folder 'public'
 app.use(express.static("public/absen")); // Menyajikan file statis dari folder 'public/absen'
 app.use(express.static("public/geolocation")); // Menyajikan file statis dari folder 'public/absen'
+
 
 // Menggunakan route handler untuk berbagai rute
 app.use(UserRoute); // Rute untuk pengguna

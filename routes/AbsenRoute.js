@@ -9,7 +9,7 @@ import {
 const router = express.Router();
 
 router.get("/absens", GetAbsens);
-router.post("/  ", createAbsen);
+router.post("/absen", createAbsen);
 router.patch("/absen/:id", AbsenKeluar);
 router.post("/absen/geolocation", GeoLocation);
 
