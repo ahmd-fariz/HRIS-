@@ -33,10 +33,10 @@ export const Login = async (req, res) => {
     req.session.userId = user.id;
 
     // Mengambil data pengguna untuk dikirim kembali
-    const { id, name, email, role, image, url } = user;
+    const { id, name, email, roleId, image, url } = user;
 
     // Mengirim respons sukses dengan data pengguna
-    res.status(200).json({ id, name, email, role, image, url });
+    res.status(200).json({ id, name, email, roleId, image, url });
   } catch (error) {
     // Menangani kesalahan dan mengirim respons dengan status 500
     console.error("Error logging in:", error); // Log kesalahan
