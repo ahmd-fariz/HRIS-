@@ -1,5 +1,11 @@
-import Absen from "../models/Absen.js";
-import UserModel from "../models/UserModel.js";
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import Absen from '../models/Absen.js';
+import UserModel from '../models/UserModel.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Fungsi untuk mendapatkan semua data absen
 export const GetAbsens = async (req, res) => {
@@ -99,7 +105,7 @@ export const AbsenKeluar = async (req, res) => {
 
 // Fungsi untuk mengupdate geolocation absen
 export const GeoLocation = async (req, res) => {
-  const { userId, lat, long } = req.body;
+  const { userId, lat, long, keterangan, photo, alasan } = req.body;
 
   console.log("Request received to update absen for userId:", userId);
 
@@ -108,22 +114,46 @@ export const GeoLocation = async (req, res) => {
   const waktu_datang = today.toLocaleTimeString("en-GB");
 
   try {
-    const absen = await Absen.create(
-      {
-        userId,
-        tanggal: date,
-        lat,
-        long,
-        waktu_datang,
-        keterangan: "Hadir",
-      },
-      {
-        where: {
-          userId,
-          tanggal: date,
-        },
-      }
-    );
+
+    // Mengecek apakah ada file yang diunggah
+    const file = req.files.file; // Mengambil file dari req.files
+    const fileSize = file.data.length; // Mengukur ukuran file
+    const ext = path.extname(file.name); // Mendapatkan ekstensi file
+    const fileName = file.md5 + ext; // Membuat nama file baru berdasarkan hash MD5 dan ekstensi
+    const allowedType = [".png", ".jpg", ".jpeg"]; // Daftar ekstensi file gambar yang diizinkan
+
+    if (!allowedType.includes(ext.toLowerCase()))
+      return res.status(422).json({ msg: "Invalid Images" }); // Mengirimkan respon dengan status 422 jika ekstensi file tidak valid
+
+    if (fileSize > 5000000)
+      return res.status(422).json({ msg: "Image must be less than 5 MB" }); // Mengirimkan respon dengan status 422 jika ukuran file melebihi 5 MB
+
+    // Hapus file lama dari direktori
+    const filepath = `./public/geolocation/${user.image}`;
+    if (fs.existsSync(filepath)) {
+      fs.unlinkSync(filepath); // Menghapus file jika ada
+    }
+
+    // Simpan file baru ke direktori
+    file.mv(`./public/geolocation/${fileName}`, (err) => {
+      if (err) return res.status(500).json({ msg: err.message }); // Mengirimkan respon dengan status 500 jika terjadi kesalahan saat memindahkan file
+    });
+  
+
+  // Membuat URL file gambar baru
+  const url = `${req.protocol}://${req.get("host")}/geolocation/${fileName}`
+
+    const absen = await Absen.create({
+      userId,
+      tanggal: date,
+      lat,
+      long,
+      waktu_datang,
+      keterangan,
+      foto: fileName,
+      url_foto: url,
+      alasan
+    });
     console.log("Absen Geolocation:", absen);
     res.status(200).json({ msg: "Berhasil Update Geolocation", absen });
   } catch (error) {

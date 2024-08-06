@@ -49,6 +49,7 @@ app.use(express.json()); // Middleware untuk parsing JSON
 app.use(FileUpload()); // Middleware untuk menangani upload file
 app.use(express.static("public")); // Menyajikan file statis dari folder 'public'
 app.use(express.static("public/absen")); // Menyajikan file statis dari folder 'public/absen'
+app.use(express.static("public/geolocation")); // Menyajikan file statis dari folder 'public/absen'
 
 // Menggunakan route handler untuk berbagai rute
 app.use(UserRoute); // Rute untuk pengguna
