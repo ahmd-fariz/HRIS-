@@ -3,6 +3,7 @@ import path from "path";
 import cron from "node-cron";
 import Absen from "../models/Absen.js";
 import UserModel from "../models/UserModel.js";
+import Alpha from "../models/Alpha.js";
 import Role from "../models/Role.js";
 
 // Fungsi untuk mendapatkan semua data absen
@@ -77,13 +78,32 @@ export const createAbsen = async (req, res) => {
 // Fungsi untuk mengecek dan menandai absensi
 const checkAndMarkAbsentees = async () => {
   const now = new Date();
-  const hour = now.getHours();
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const date = yesterday.toISOString().split("T")[0];
-
+  
   try {
+    // Mengambil jam_alpha dari tabel alpha dengan id 1
+    const alphaRecord = await Alpha.findOne({
+      where: { id: 1 },
+      attributes: ['jam_alpha']
+    });
+
+    if (!alphaRecord) {
+      console.log("Alpha record not found.");
+      return;
+    }
+
+    const jamAlpha = alphaRecord.jam_alpha;
+    const [hours, minutes] = jamAlpha.split(":").map(Number);
+
+    // Membandingkan waktu saat ini dengan jam_alpha dari database
+    if (now.getHours() >= hours && now.getMinutes() >= minutes) {
+      console.log("Current time exceeds jam_alpha, skipping the check.");
+      return;
+    }
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const date = yesterday.toISOString().split("T")[0];
+
     // Mendapatkan daftar semua userId
     const allUsers = await UserModel.findAll({
       attributes: ['id']
@@ -121,12 +141,6 @@ const checkAndMarkAbsentees = async () => {
       console.log(`${newAbsens.length} users marked as Alpha for ${date}`);
     } else {
       console.log(`No users to mark as Alpha for ${date}`);
-    }
-
-    // Jika waktu saat ini melebihi jam 9 pagi, keluar dari fungsi
-    if (hour >= 9) {
-      console.log("Current time exceeds 9 AM, skipping the check.");
-      return;
     }
   } catch (error) {
     console.error("Error checking and marking absentees:", error);
