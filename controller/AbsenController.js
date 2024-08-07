@@ -1,12 +1,9 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import cron from "node-cron";
 import Absen from "../models/Absen.js";
 import UserModel from "../models/UserModel.js";
 import Role from "../models/Role.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Fungsi untuk mendapatkan semua data absen
 export const GetAbsens = async (req, res) => {
@@ -77,6 +74,72 @@ export const createAbsen = async (req, res) => {
   }
 };
 
+// Fungsi untuk mengecek dan menandai absensi
+const checkAndMarkAbsentees = async () => {
+  const now = new Date();
+  const hour = now.getHours();
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const date = yesterday.toISOString().split("T")[0];
+
+  try {
+    // Mendapatkan daftar semua userId
+    const allUsers = await UserModel.findAll({
+      attributes: ['id']
+    });
+
+    const allUserIds = allUsers.map(user => user.id);
+
+    // Mendapatkan daftar userId yang sudah absen kemarin
+    const absentees = await Absen.findAll({
+      where: {
+        tanggal: date
+      },
+      attributes: ['userId']
+    });
+
+    const absenteesIds = absentees.map(absen => absen.userId);
+
+    // Menemukan userId yang tidak absen kemarin
+    const nonAbsenteesIds = allUserIds.filter(userId => !absenteesIds.includes(userId));
+
+    console.log(`Non-absentees for ${date}:`, nonAbsenteesIds);
+
+    // Menambahkan absen untuk user yang tidak absen kemarin
+    const newAbsens = nonAbsenteesIds.map(userId => ({
+      userId,
+      tanggal: date,
+      lat: null,
+      long: null,
+      waktu_datang: null,
+      keterangan: "Alpha"
+    }));
+
+    if (newAbsens.length > 0) {
+      await Absen.bulkCreate(newAbsens);
+      console.log(`${newAbsens.length} users marked as Alpha for ${date}`);
+    } else {
+      console.log(`No users to mark as Alpha for ${date}`);
+    }
+
+    // Jika waktu saat ini melebihi jam 9 pagi, keluar dari fungsi
+    if (hour >= 9) {
+      console.log("Current time exceeds 9 AM, skipping the check.");
+      return;
+    }
+  } catch (error) {
+    console.error("Error checking and marking absentees:", error);
+  }
+};
+
+// Menjadwalkan cron job untuk menjalankan setiap menit
+cron.schedule('* * * * *', checkAndMarkAbsentees);
+
+// Jalankan fungsi sekali untuk mengisi data awal setelah truncate
+checkAndMarkAbsentees();
+
+
 // Fungsi untuk mengupdate waktu keluar absen
 export const AbsenKeluar = async (req, res) => {
   const { userId, reason } = req.body;
@@ -123,9 +186,9 @@ export const GeoLocation = async (req, res) => {
     }
     // Mengecek apakah ada file yang diunggah
     const photo = req.files.file; // Mengambil file dari req.files
-    const fileSize = file.data.lenght; // Mengukur ukuran file
+    const fileSize = photo.data.length; // Mengukur ukuran file
     const ext = path.extname(photo.name); // Mendapatkan ekstensi file
-    const fileName = file.md5 + ext; // Membuat nama file baru berdasarkan hash MD5 dan ekstensi
+    const fileName = photo.md5 + ext; // Membuat nama file baru berdasarkan hash MD5 dan ekstensi
     const allowedType = [".png", ".jpg", ".jpeg"]; // Daftar ekstensi file gambar yang diizinkan
 
     if (!allowedType.includes(ext.toLowerCase()))
@@ -141,7 +204,7 @@ export const GeoLocation = async (req, res) => {
     }
 
     // Simpan file baru ke direktori
-    file.mv(`./public/geolocation/${fileName}`, (err) => {
+    photo.mv(`./public/geolocation/${fileName}`, (err) => {
       if (err) return res.status(500).json({ msg: err.message }); // Mengirimkan respon dengan status 500 jika terjadi kesalahan saat memindahkan file
     });
 
