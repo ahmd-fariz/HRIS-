@@ -23,6 +23,8 @@ export const GetAbsens = async (req, res) => {
         "waktu_datang",
         "waktu_keluar",
         "keterangan",
+        "foto",
+        "url_foto",
         "lat",
         "long",
       ],
@@ -86,34 +88,36 @@ const checkAndMarkAbsentees = async () => {
   try {
     // Mendapatkan daftar semua userId
     const allUsers = await UserModel.findAll({
-      attributes: ['id']
+      attributes: ["id"],
     });
 
-    const allUserIds = allUsers.map(user => user.id);
+    const allUserIds = allUsers.map((user) => user.id);
 
     // Mendapatkan daftar userId yang sudah absen kemarin
     const absentees = await Absen.findAll({
       where: {
-        tanggal: date
+        tanggal: date,
       },
-      attributes: ['userId']
+      attributes: ["userId"],
     });
 
-    const absenteesIds = absentees.map(absen => absen.userId);
+    const absenteesIds = absentees.map((absen) => absen.userId);
 
     // Menemukan userId yang tidak absen kemarin
-    const nonAbsenteesIds = allUserIds.filter(userId => !absenteesIds.includes(userId));
+    const nonAbsenteesIds = allUserIds.filter(
+      (userId) => !absenteesIds.includes(userId)
+    );
 
     console.log(`Non-absentees for ${date}:`, nonAbsenteesIds);
 
     // Menambahkan absen untuk user yang tidak absen kemarin
-    const newAbsens = nonAbsenteesIds.map(userId => ({
+    const newAbsens = nonAbsenteesIds.map((userId) => ({
       userId,
       tanggal: date,
       lat: null,
       long: null,
       waktu_datang: null,
-      keterangan: "Alpha"
+      keterangan: "Alpha",
     }));
 
     if (newAbsens.length > 0) {
@@ -134,11 +138,10 @@ const checkAndMarkAbsentees = async () => {
 };
 
 // Menjadwalkan cron job untuk menjalankan setiap menit
-cron.schedule('* * * * *', checkAndMarkAbsentees);
+cron.schedule("* * * * *", checkAndMarkAbsentees);
 
 // Jalankan fungsi sekali untuk mengisi data awal setelah truncate
 checkAndMarkAbsentees();
-
 
 // Fungsi untuk mengupdate waktu keluar absen
 export const AbsenKeluar = async (req, res) => {
@@ -170,7 +173,6 @@ export const AbsenKeluar = async (req, res) => {
   }
 };
 
-// Fungsi untuk mengupdate geolocation absen
 export const GeoLocation = async (req, res) => {
   const { userId, lat, long, keterangan, alasan } = req.body;
 
@@ -181,30 +183,27 @@ export const GeoLocation = async (req, res) => {
   const waktu_datang = today.toLocaleTimeString("en-GB");
 
   try {
+    // Mengecek apakah ada file yang diunggah
     if (!req.file) {
       return res.status(400).json({ msg: "No file uploaded" }); // Mengirimkan respon dengan status 400 jika tidak ada file yang diunggah
     }
-    // Mengecek apakah ada file yang diunggah
-    const photo = req.files.file; // Mengambil file dari req.files
-    const fileSize = photo.data.length; // Mengukur ukuran file
-    const ext = path.extname(photo.name); // Mendapatkan ekstensi file
-    const fileName = photo.md5 + ext; // Membuat nama file baru berdasarkan hash MD5 dan ekstensi
+
+    const foto = req.files.file; // Mengambil file dari req.files
+    const fileSize = foto.data.length; // Mengukur ukuran file
+    const ext = path.extname(foto.name); // Mendapatkan ekstensi file
+    const fileName = foto.md5 + ext; // Membuat nama file baru berdasarkan hash MD5 dan ekstensi
     const allowedType = [".png", ".jpg", ".jpeg"]; // Daftar ekstensi file gambar yang diizinkan
 
-    if (!allowedType.includes(ext.toLowerCase()))
+    if (!allowedType.includes(ext.toLowerCase())) {
       return res.status(422).json({ msg: "Invalid Images" }); // Mengirimkan respon dengan status 422 jika ekstensi file tidak valid
+    }
 
-    if (fileSize > 5000000)
+    if (fileSize > 5000000) {
       return res.status(422).json({ msg: "Image must be less than 5 MB" }); // Mengirimkan respon dengan status 422 jika ukuran file melebihi 5 MB
-
-    // Hapus file lama dari direktori
-    const filepath = `./public/geolocation/${absen.foto}`;
-    if (fs.existsSync(filepath)) {
-      fs.unlinkSync(filepath); // Menghapus file jika ada
     }
 
     // Simpan file baru ke direktori
-    photo.mv(`./public/geolocation/${fileName}`, (err) => {
+    foto.mv(`./public/geolocation/${fileName}`, (err) => {
       if (err) return res.status(500).json({ msg: err.message }); // Mengirimkan respon dengan status 500 jika terjadi kesalahan saat memindahkan file
     });
 
