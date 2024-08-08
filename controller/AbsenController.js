@@ -1,3 +1,4 @@
+import express from "express";
 import fs from "fs";
 import path from "path";
 import cron from "node-cron";
@@ -5,6 +6,8 @@ import Absen from "../models/Absen.js";
 import UserModel from "../models/UserModel.js";
 import Alpha from "../models/Alpha.js";
 import Role from "../models/Role.js";
+
+const router = express.Router();
 
 // Fungsi untuk mendapatkan semua data absen
 export const GetAbsens = async (req, res) => {
@@ -242,3 +245,36 @@ export const GeoLocation = async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 };
+
+  // Untuk menampilkan keterangan absen
+export const CheckUserAbsenStatus = async (req, res) => {
+  const { userId, id } = req.params; // Ambil userId dan id dari parameter
+
+  const today = new Date();
+  const date = today.toISOString().split("T")[0];
+
+  try {
+    const absen = await Absen.findOne({
+      where: {
+        userId,
+        id, // Pastikan untuk memeriksa id juga
+        tanggal: date,
+      },
+    });
+
+    if (!absen) {
+      return res.status(200).json({ msg: "Anda belum absen hari ini." });
+    }
+
+    if (absen.keterangan === "Alpha") {
+      return res.status(200).json({ msg: "Anda di Alpha hari ini." });
+    }
+
+    return res.status(200).json({ msg: "Anda sudah absen hari ini." });
+  } catch (error) {
+    console.error("Error checking user absen status:", error);
+    res.status(500).json({ msg: error.message });
+  }
+};
+
+export default router;

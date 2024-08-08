@@ -45,7 +45,7 @@ app.use(
 app.use(
   cors({
     credentials: true, // Mengizinkan pengiriman kredensial seperti cookie
-    origin: ["http://localhost:3000", "http://192.168.30.15:3000"], // Mengizinkan akses dari kedua origin ini
+    origin: ["http://localhost:3000"], // Mengizinkan akses dari kedua origin ini
   })
 );
 
