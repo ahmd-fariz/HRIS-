@@ -37,7 +37,6 @@ const Setting = db.define(
       allowNull: false,
       validate: {
         notEmpty: true,
-        isEmail: true,
       },
     },
     warna_sidebar: {
