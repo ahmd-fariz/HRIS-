@@ -10,7 +10,7 @@ import {
 const router = express.Router();
 
 router.get("/absens", GetAbsens);
-router.get("/cek/absen/:userid/:id", CheckUserAbsenStatus);
+router.get("/cek/absen/:id/:userid", CheckUserAbsenStatus);
 router.post("/absen", createAbsen);
 router.patch("/absen/:id", AbsenKeluar);
 router.post("/absen/geolocation", GeoLocation);
