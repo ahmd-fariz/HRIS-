@@ -23,7 +23,7 @@ const Absen = db.define(
     },
     waktu_datang: {
       type: DataTypes.TIME,
-      allowNull: false,
+      allowNull: true,
      // defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     waktu_keluar: {
@@ -32,11 +32,11 @@ const Absen = db.define(
     },
     lat: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     long: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     // Input foto, besok ajalah
     foto: {
