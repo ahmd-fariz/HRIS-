@@ -3,7 +3,7 @@ import db from "../config/Database.js";
 
 const { DataTypes } = Sequelize;
 
-// Mendefinisikan model Users dengan id sebagai primary key
+// Mendefinisikan model Alpha dengan id sebagai primary key
 const Alpha = db.define(
   "alpha",
   {
@@ -14,7 +14,7 @@ const Alpha = db.define(
       primaryKey: true,
     },
     jam_alpha: {
-      // Mendefinisikan kolom name dengan validasi tidak boleh kosong dan panjang antara 3 hingga 100 karakter
+      // Mendefinisikan kolom jam_alpha dengan tipe data TIME dan tidak boleh kosong
       type: DataTypes.TIME,
       allowNull: false,
     },

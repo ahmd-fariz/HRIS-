@@ -11,6 +11,7 @@ import AuthRoute from "./routes/AuthRoute.js";
 import SettingRoute from "./routes/SettingRoute.js";
 import RoleRoute from "./routes/RoleRoute.js";
 import AlphaRoute from "./routes/AlphaRoute.js";
+import HariLiburRoute from "./routes/HariLiburRoute.js";
 import dotenv from "dotenv";
 dotenv.config(); // Memuat variabel lingkungan dari file .env
 
@@ -62,7 +63,8 @@ app.use(AbsenRoute); // Rute untuk absensi
 app.use(AuthRoute); // Rute untuk autentikasi
 app.use(SettingRoute); // Rute untuk setting
 app.use(RoleRoute); // Rute untuk role
-app.use(AlphaRoute); // Rute untuk role
+app.use(AlphaRoute); // Rute untuk alpha
+app.use(HariLiburRoute); // Rute untuk hari libur
 
 store.sync(); // Menyinkronkan tabel session dengan database
 
