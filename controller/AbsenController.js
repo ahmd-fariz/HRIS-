@@ -27,11 +27,12 @@ export const GetAbsens = async (req, res) => {
         "tanggal",
         "waktu_datang",
         "waktu_keluar",
-        "keterangan",
-        "foto",
-        "url_foto",
         "lat",
         "long",
+        "foto",
+        "url_foto",
+        "keterangan",
+        "alasan",
       ],
     });
 
