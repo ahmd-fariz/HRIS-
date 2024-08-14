@@ -63,6 +63,12 @@ const Users = db.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    status: {
+      // Status untuk user apakah masih terikat dengan perusahaan atau tidak
+      type: DataTypes.ENUM('Aktif', 'Non-Aktif'),
+      allowNull: false,
+      defaultValue: 'Aktif',
+    },
   },
   {
     // Mengatur nama tabel untuk tidak mengubah ke bentuk plural secara otomatis

@@ -8,7 +8,7 @@ import argon2 from "argon2"; // Mengimpor argon2 untuk hashing password
 export const GetUsers = async (req, res) => {
   try {
     const response = await UserModel.findAll({
-      attributes: ["id", "name", "email", "roleId", "url"], // Mengambil atribut id, name, email, roleId, dan image dari model UserModel
+      attributes: ["id", "name", "email", "roleId", "status", "url"], // Mengambil atribut id, name, email, roleId, dan image dari model UserModel
       include: [
         {
           model: RoleModel,
@@ -96,7 +96,7 @@ export const UpdatePotoProfile = async (req, res) => {
 export const GetUsersById = async (req, res) => {
   try {
     const response = await UserModel.findOne({
-      attributes: ["id", "name", "email", "password", "roleId", "url"], // Mengambil atribut id, name, email, password, roleId, dan url dari model UserModel
+      attributes: ["id", "name", "email", "password", "roleId", "status", "url"], // Mengambil atribut id, name, email, password, roleId, dan url dari model UserModel
       where: {
         id: req.params.id, // Mencari pengguna berdasarkan id dari parameter route
       },

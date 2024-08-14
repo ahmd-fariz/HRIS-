@@ -1,8 +1,8 @@
 import { json } from "sequelize";
 import User from "../models/UserModel.js";
+import Role from "../models/Role.js";
 import argon2 from "argon2";
 
-// Fungsi untuk login pengguna
 export const Login = async (req, res) => {
   try {
     console.log("Request body:", req.body); // Log request body
@@ -32,17 +32,26 @@ export const Login = async (req, res) => {
     // Menyimpan id pengguna di sesi
     req.session.userId = user.id;
 
+    // Mencari role berdasarkan roleId pengguna
+    const role = await Role.findOne({
+      where: {
+        id: user.roleId,
+      },
+    });
+
     // Mengambil data pengguna untuk dikirim kembali
     const { id, name, email, roleId, image, url } = user;
+    const nama_role = role ? role.nama_role : null; // Mendapatkan nama role
 
     // Mengirim respons sukses dengan data pengguna
-    res.status(200).json({ id, name, email, roleId, image, url });
+    res.status(200).json({ id, name, email, roleId, nama_role, image, url });
   } catch (error) {
     // Menangani kesalahan dan mengirim respons dengan status 500
     console.error("Error logging in:", error); // Log kesalahan
     res.status(500).json({ msg: "Terjadi kesalahan pada server" });
   }
 };
+
 
 // Fungsi untuk mendapatkan informasi pengguna yang sedang login
 export const Me = async (req, res) => {
