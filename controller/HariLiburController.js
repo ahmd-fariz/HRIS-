@@ -7,7 +7,7 @@ export const getHariLibur = async (req, res) => {
     const formattedHariLibur = hariLibur.map(hl => ({
       id: hl.id,
       nama_libur: hl.nama_libur,
-      tanggal_bulan: hl.getTanggalBulan()
+      tanggal_hari_libur: hl.tanggal_hari_libur,
     }));
     res.status(200).json(formattedHariLibur);
   } catch (error) {
@@ -25,7 +25,7 @@ export const getHariLiburById = async (req, res) => {
     res.status(200).json({
       id: hariLibur.id,
       nama_libur: hariLibur.nama_libur,
-      tanggal_bulan: hariLibur.getTanggalBulan()
+      tanggal_hari_libur: hariLibur.tanggal_hari_libur,
     });
   } catch (error) {
     res.status(500).json({ msg: error.message });
@@ -38,26 +38,18 @@ export const createHariLibur = async (req, res) => {
     console.log("Received body:", req.body); // Logging untuk debugging
 
     const nama_libur = req.body.nama_libur;
-    const tanggal_bulan = req.body.tanggal_hari_libur || req.body.tanggal_bulan;
+    const tanggal_hari_libur = req.body.tanggal_hari_libur;
 
-    if (!nama_libur || !tanggal_bulan) {
+    if (!nama_libur || !tanggal_hari_libur) {
       return res.status(400).json({ 
-        msg: "Nama libur dan tanggal bulan harus diisi",
-        received: { nama_libur, tanggal_bulan }
+        msg: "Nama libur dan tanggal harus diisi",
+        received: { nama_libur, tanggal_hari_libur }
       });
     }
-
-    if (!/^\d{2}-\d{2}$/.test(tanggal_bulan)) {
-      return res.status(400).json({ msg: "Format tanggal bulan harus MM-DD" });
-    }
-
-    const [month, day] = tanggal_bulan.split('-');
-    const currentYear = new Date().getFullYear();
-    const fullDate = `${currentYear}-${month}-${day}`;
     
     const newHariLibur = await HariLibur.create({
       nama_libur,
-      tanggal_hari_libur: fullDate
+      tanggal_hari_libur,
     });
     
     res.status(201).json({ 
@@ -65,7 +57,7 @@ export const createHariLibur = async (req, res) => {
       hariLibur: {
         id: newHariLibur.id,
         nama_libur: newHariLibur.nama_libur,
-        tanggal_bulan: newHariLibur.getTanggalBulan()
+        tanggal_hari_libur: newHariLibur.tanggal_hari_libur,
       }
     });
   } catch (error) {
@@ -86,18 +78,9 @@ export const updateHariLibur = async (req, res) => {
       return res.status(404).json({ msg: "Hari libur tidak ditemukan" });
     }
 
-    if (nama_libur) {
+    if (nama_libur && tanggal_hari_libur) {
       hariLibur.nama_libur = nama_libur;
-    }
-
-    if (tanggal_hari_libur) {
-      if (!/^\d{2}-\d{2}$/.test(tanggal_hari_libur)) {
-        return res.status(400).json({ msg: "Format tanggal bulan harus MM-DD" });
-      }
-
-      const [month, day] = tanggal_hari_libur.split('-');
-      const currentYear = new Date().getFullYear();
-      hariLibur.tanggal_hari_libur = `${currentYear}-${month}-${day}`;
+      hariLibur.tanggal_hari_libur = tanggal_hari_libur;
     }
 
     await hariLibur.save();
@@ -107,7 +90,7 @@ export const updateHariLibur = async (req, res) => {
       hariLibur: {
         id: hariLibur.id,
         nama_libur: hariLibur.nama_libur,
-        tanggal_bulan: hariLibur.getTanggalBulan()
+        tanggal_hari_libur: hariLibur.tanggal_hari_libur,
       }
     });
   } catch (error) {
