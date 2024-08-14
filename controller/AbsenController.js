@@ -85,12 +85,12 @@ export const createAbsen = async (req, res) => {
 // Fungsi untuk mengecek dan menandai absensi
 const checkAndMarkAbsentees = async () => {
   const now = new Date();
-  
+
   try {
     // Mengambil jam_alpha dari tabel alpha dengan id 1
     const alphaRecord = await Alpha.findOne({
       where: { id: 1 },
-      attributes: ['jam_alpha']
+      attributes: ["jam_alpha"],
     });
 
     if (!alphaRecord) {
@@ -110,6 +110,18 @@ const checkAndMarkAbsentees = async () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const date = yesterday.toISOString().split("T")[0];
+
+    // Cek apakah tanggal kemarin adalah hari libur
+    const isHoliday = await HariLibur.findOne({
+      where: { tanggal_hari_libur: date },
+    });
+
+    if (isHoliday) {
+      console.log(
+        `Yesterday (${date}) was a holiday (${isHoliday.nama_libur}), no absentees will be marked.`
+      );
+      return;
+    }
 
     // Mendapatkan daftar semua userId
     const allUsers = await UserModel.findAll({
