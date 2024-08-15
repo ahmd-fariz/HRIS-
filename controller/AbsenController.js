@@ -10,7 +10,7 @@ import HariLibur from "../models/HariLibur.js";
 
 const router = express.Router();
 
-// Fungsi untuk mendapatkan semua data absen
+// Function to get all attendance records
 export const GetAbsens = async (req, res) => {
   try {
     const response = await Absen.findAll({
@@ -42,7 +42,7 @@ export const GetAbsens = async (req, res) => {
   }
 };
 
-// Fungsi untuk membuat data absen baru
+// Function to create new attendance record
 export const createAbsen = async (req, res) => {
   const { userId, lat, long } = req.body;
 
@@ -82,12 +82,12 @@ export const createAbsen = async (req, res) => {
   }
 };
 
-// Fungsi untuk mengecek dan menandai absensi
+// Function to check and mark absentees
 const checkAndMarkAbsentees = async () => {
   const now = new Date();
 
   try {
-    // Mengambil jam_alpha dari tabel alpha dengan id 1
+    // Get jam_alpha from alpha table with id 1
     const alphaRecord = await Alpha.findOne({
       where: { id: 1 },
       attributes: ["jam_alpha"],
@@ -101,54 +101,50 @@ const checkAndMarkAbsentees = async () => {
     const jamAlpha = alphaRecord.jam_alpha;
     const [hours, minutes] = jamAlpha.split(":").map(Number);
 
-    // Membandingkan waktu saat ini dengan jam_alpha dari database
-    if (now.getHours() >= hours && now.getMinutes() >= minutes) {
-      console.log("Current time exceeds jam_alpha, skipping the check.");
+    // Compare current time with jam_alpha
+    if (now.getHours() < hours || (now.getHours() === hours && now.getMinutes() < minutes)) {
+      console.log("Current time has not exceeded jam_alpha, skipping the check.");
       return;
     }
 
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const date = yesterday.toISOString().split("T")[0];
+    const date = now.toISOString().split("T")[0];
 
-    // Cek apakah tanggal kemarin adalah hari libur
+    // Check if today is a holiday
     const isHoliday = await HariLibur.findOne({
       where: { tanggal_hari_libur: date },
     });
 
     if (isHoliday) {
-      console.log(
-        `Yesterday (${date}) was a holiday (${isHoliday.nama_libur}), no absentees will be marked.`
-      );
+      console.log(`Today (${date}) is a holiday (${isHoliday.nama_libur}), no absentees will be marked.`);
       return;
     }
 
-    // Mendapatkan daftar semua userId
+    // Get all user IDs
     const allUsers = await UserModel.findAll({
       attributes: ["id"],
     });
 
     const allUserIds = allUsers.map((user) => user.id);
 
-    // Mendapatkan daftar userId yang sudah absen kemarin
-    const absentees = await Absen.findAll({
+    // Get user IDs who have checked in today
+    const presentUsers = await Absen.findAll({
       where: {
         tanggal: date,
       },
       attributes: ["userId"],
     });
 
-    const absenteesIds = absentees.map((absen) => absen.userId);
+    const presentUserIds = presentUsers.map((absen) => absen.userId);
 
-    // Menemukan userId yang tidak absen kemarin
-    const nonAbsenteesIds = allUserIds.filter(
-      (userId) => !absenteesIds.includes(userId)
+    // Find user IDs who have not checked in today
+    const absentUserIds = allUserIds.filter(
+      (userId) => !presentUserIds.includes(userId)
     );
 
-    console.log(`Non-absentees for ${date}:`, nonAbsenteesIds);
+    console.log(`Absent users for ${date}:`, absentUserIds);
 
-    // Menambahkan absen untuk user yang tidak absen kemarin
-    const newAbsens = nonAbsenteesIds.map((userId) => ({
+    // Mark absent users
+    const newAbsens = absentUserIds.map((userId) => ({
       userId,
       tanggal: date,
       lat: null,
@@ -168,13 +164,13 @@ const checkAndMarkAbsentees = async () => {
   }
 };
 
-// Menjadwalkan cron job untuk menjalankan setiap menit
+// Schedule cron job to run every minute
 cron.schedule("* * * * *", checkAndMarkAbsentees);
 
-// Jalankan fungsi sekali untuk mengisi data awal setelah truncate
+// Run the function once to initialize after truncate
 checkAndMarkAbsentees();
 
-// Fungsi untuk mengupdate waktu keluar absen
+// Function to update the checkout time
 export const AbsenKeluar = async (req, res) => {
   const { userId, reason } = req.body;
 
@@ -214,31 +210,31 @@ export const GeoLocation = async (req, res) => {
   const waktu_datang = today.toLocaleTimeString("en-GB");
 
   try {
-    // Mengecek apakah ada file yang diunggah
+    // Check if a file is uploaded
     if (!req.file) {
-      return res.status(400).json({ msg: "No file uploaded" }); // Mengirimkan respon dengan status 400 jika tidak ada file yang diunggah
+      return res.status(400).json({ msg: "No file uploaded" });
     }
 
-    const foto = req.files.file; // Mengambil file dari req.files
-    const fileSize = foto.data.length; // Mengukur ukuran file
-    const ext = path.extname(foto.name); // Mendapatkan ekstensi file
-    const fileName = foto.md5 + ext; // Membuat nama file baru berdasarkan hash MD5 dan ekstensi
-    const allowedType = [".png", ".jpg", ".jpeg"]; // Daftar ekstensi file gambar yang diizinkan
+    const foto = req.files.file;
+    const fileSize = foto.data.length;
+    const ext = path.extname(foto.name);
+    const fileName = foto.md5 + ext;
+    const allowedType = [".png", ".jpg", ".jpeg"];
 
     if (!allowedType.includes(ext.toLowerCase())) {
-      return res.status(422).json({ msg: "Invalid Images" }); // Mengirimkan respon dengan status 422 jika ekstensi file tidak valid
+      return res.status(422).json({ msg: "Invalid Images" });
     }
 
     if (fileSize > 5000000) {
-      return res.status(422).json({ msg: "Image must be less than 5 MB" }); // Mengirimkan respon dengan status 422 jika ukuran file melebihi 5 MB
+      return res.status(422).json({ msg: "Image must be less than 5 MB" });
     }
 
-    // Simpan file baru ke direktori
+    // Save new file to directory
     foto.mv(`./public/geolocation/${fileName}`, (err) => {
-      if (err) return res.status(500).json({ msg: err.message }); // Mengirimkan respon dengan status 500 jika terjadi kesalahan saat memindahkan file
+      if (err) return res.status(500).json({ msg: err.message });
     });
 
-    // Membuat URL file gambar baru
+    // Create new image URL
     const url = `${req.protocol}://${req.get("host")}/geolocation/${fileName}`;
 
     const absen = await Absen.create({

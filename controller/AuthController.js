@@ -40,11 +40,11 @@ export const Login = async (req, res) => {
     });
 
     // Mengambil data pengguna untuk dikirim kembali
-    const { id, name, email, roleId, image, url } = user;
+    const { id, name, email, roleId, image, url, status } = user;
     const nama_role = role ? role.nama_role : null; // Mendapatkan nama role
 
     // Mengirim respons sukses dengan data pengguna
-    res.status(200).json({ id, name, email, roleId, nama_role, image, url });
+    res.status(200).json({ id, name, email, roleId, nama_role, image, url, status });
   } catch (error) {
     // Menangani kesalahan dan mengirim respons dengan status 500
     console.error("Error logging in:", error); // Log kesalahan
