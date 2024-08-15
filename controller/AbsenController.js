@@ -1,5 +1,6 @@
 import express from "express";
 import fs from "fs";
+import nodemailer from "nodemailer";
 import path from "path";
 import cron from "node-cron";
 import Absen from "../models/Absen.js";
@@ -255,5 +256,53 @@ export const GeoLocation = async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 };
+
+// Configure nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "rfqfrashsym@gmail.com", // Ganti dengan email Anda
+    pass: "your-app-password", // Ganti dengan password Anda (gunakan App Password jika 2FA diaktifkan)
+  },
+});
+
+// Function to get users marked as 'alpha' today
+const getUsersWithAlphaStatusToday = async () => {
+  const today = new Date().toISOString().split("T")[0]; // Format date as YYYY-MM-DD
+  try {
+    // Fetch users with 'alpha' status for today
+    const absens = await Absen.find({ keterangan: "Alpha", tanggal: today }).populate("userId");
+    return absens.map((absen) => absen.userId);
+  } catch (error) {
+    console.error("Error fetching users with alpha status:", error);
+    throw error;
+  }
+};
+
+// Function to send email to users marked as 'alpha'
+const sendAlphaEmails = async () => {
+  try {
+    const users = await getUsersWithAlphaStatusToday();
+    for (const user of users) {
+      const mailOptions = {
+        from: "rfqfrashsym@gmail.com",
+        to: user.email,
+        subject: "Attendance Reminder",
+        text: `Dear ${user.name},\n\nYou have been marked as 'Alpha' today. Please ensure to adhere to the attendance policies.\n\nBest regards,\nYour Company`,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`Email sent to ${user.email}`);
+    }
+  } catch (error) {
+    console.error("Error sending alpha emails:", error);
+  }
+};
+
+// Schedule the email sending function to run at a specific time daily
+cron.schedule("0 8 * * *", () => {
+  console.log("Running alpha email notification task");
+  sendAlphaEmails();
+});
 
 export default router;
