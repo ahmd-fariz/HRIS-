@@ -1,6 +1,6 @@
 import express from "express";
-import fs from "fs";
 import nodemailer from "nodemailer";
+import { Sequelize } from 'sequelize';
 import path from "path";
 import cron from "node-cron";
 import Absen from "../models/Absen.js";
@@ -120,8 +120,17 @@ const checkAndMarkAbsentees = async () => {
       return;
     }
 
-    // Get all user IDs
+    // Get all user IDs excluding Managers and Admins
     const allUsers = await UserModel.findAll({
+      include: {
+        model: Role,
+        attributes: ["nama_role"],
+        where: {
+          nama_role: {
+            [Sequelize.Op.notIn]: ["Manager", "Admin"], // Exclude Managers and Admins
+          },
+        },
+      },
       attributes: ["id"],
     });
 
@@ -164,6 +173,7 @@ const checkAndMarkAbsentees = async () => {
     console.error("Error checking and marking absentees:", error);
   }
 };
+
 
 // Schedule cron job to run every minute
 cron.schedule("* * * * *", checkAndMarkAbsentees);
@@ -279,6 +289,41 @@ const getUsersWithAlphaStatusToday = async () => {
   }
 };
 
+// Function to initialize the cron job for sending alpha emails
+const initializeAlphaEmailCronJob = async () => {
+  try {
+    // Fetch the alpha record
+    const alphaRecord = await Alpha.findOne({
+      where: { id: 1 },
+      attributes: ["jam_alpha"],
+    });
+
+    if (!alphaRecord) {
+      console.error("Alpha record not found.");
+      return;
+    }
+
+    const jamAlpha = alphaRecord.jam_alpha;
+    const [hours, minutes] = jamAlpha.split(":").map(Number);
+
+    // Construct the cron schedule expression
+    const cronSchedule = `${minutes} ${hours} * * *`; // Run daily at the specified hour and minute
+
+    // Schedule the email sending function using the cron schedule
+    cron.schedule(cronSchedule, () => {
+      console.log("Running alpha email notification task");
+      sendAlphaEmails();
+    });
+
+    console.log(`Alpha email notification cron job scheduled at ${hours}:${minutes}`);
+  } catch (error) {
+    console.error("Error initializing alpha email cron job:", error);
+  }
+};
+
+// Call the function to initialize the cron job when the application starts
+initializeAlphaEmailCronJob();
+
 // Function to send email to users marked as 'alpha'
 const sendAlphaEmails = async () => {
   try {
@@ -288,7 +333,7 @@ const sendAlphaEmails = async () => {
         from: "rfqfrashsym@gmail.com",
         to: user.email,
         subject: "Attendance Reminder",
-        text: `Dear ${user.name},\n\nYou have been marked as 'Alpha' today. Please ensure to adhere to the attendance policies.\n\nBest regards,\nYour Company`,
+        text: `Dear ${user.name},\n\nYou have been marked as 'Alpha' today. Please ensure to adhere to the attendance policies.\n\nBest regards,\nPT. Grage Media Technology`,
       };
 
       await transporter.sendMail(mailOptions);
@@ -299,10 +344,19 @@ const sendAlphaEmails = async () => {
   }
 };
 
-// Schedule the email sending function to run at a specific time daily
-cron.schedule("0 8 * * *", () => {
-  console.log("Running alpha email notification task");
-  sendAlphaEmails();
-});
+// Fungsi untuk mendapatkan detail pengguna berdasarkan userId untuk menampilkan persentase kehadiran selama sebulan
+export const GetPercentageUser = async (req, res) => {
+  try {
+    const response = await Absen.findAll({
+      attributes: ["userId", "tanggal", "keterangan"], // Mengambil atribut
+      where: {
+        userId: req.params.id, // Mencari pengguna berdasarkan id dari parameter route
+      },
+    });
+    res.status(200).json(response); // Mengirimkan respon dengan status 200 dan data pengguna dalam format JSON
+  } catch (error) {
+    res.status(500).json({ msg: error.message }); // Mengirimkan respon dengan status 500 dan pesan error jika terjadi kesalahan
+  }
+};
 
 export default router;
