@@ -289,46 +289,22 @@ const getUsersWithAlphaStatusToday = async () => {
   }
 };
 
-// Function to initialize the cron job for sending alpha emails
-const initializeAlphaEmailCronJob = async () => {
-  try {
-    // Fetch the alpha record
-    const alphaRecord = await Alpha.findOne({
-      where: { id: 1 },
-      attributes: ["jam_alpha"],
-    });
-
-    if (!alphaRecord) {
-      console.error("Alpha record not found.");
-      return;
-    }
-
-    const jamAlpha = alphaRecord.jam_alpha;
-    const [hours, minutes] = jamAlpha.split(":").map(Number);
-
-    // Construct the cron schedule expression
-    const cronSchedule = `${minutes} ${hours} * * *`; // Run daily at the specified hour and minute
-
-    // Schedule the email sending function using the cron schedule
-    cron.schedule(cronSchedule, () => {
-      console.log("Running alpha email notification task");
-      sendAlphaEmails();
-    });
-
-    console.log(`Alpha email notification cron job scheduled at ${hours}:${minutes}`);
-  } catch (error) {
-    console.error("Error initializing alpha email cron job:", error);
-  }
-};
-
-// Call the function to initialize the cron job when the application starts
-initializeAlphaEmailCronJob();
-
 // Function to send email to users marked as 'alpha'
 const sendAlphaEmails = async () => {
   try {
     const users = await getUsersWithAlphaStatusToday();
+    if (users.length === 0) {
+      console.log("No users marked as 'Alpha' today, skipping email sending.");
+      return;
+    }
+
     for (const user of users) {
+      // Assuming user is an object with an email field
+      if (!user.email) {
+        console.log(`User ID ${user.id} does not have an email address.`);
+        continue;
+      }
+
       const mailOptions = {
         from: "rfqfrashsym@gmail.com",
         to: user.email,
@@ -343,6 +319,39 @@ const sendAlphaEmails = async () => {
     console.error("Error sending alpha emails:", error);
   }
 };
+
+// Initialize cron job after ensuring the server is ready
+const initializeAlphaEmailCronJob = async () => {
+  try {
+    const alphaRecord = await Alpha.findOne({
+      where: { id: 1 },
+      attributes: ["jam_alpha"],
+    });
+
+    if (!alphaRecord) {
+      console.error("Alpha record not found.");
+      return;
+    }
+
+    const jamAlpha = alphaRecord.jam_alpha;
+    const [hours, minutes] = jamAlpha.split(":").map(Number);
+
+    // Schedule email sending task based on 'jam_alpha'
+    const cronSchedule = `${minutes} ${hours} * * *`; // Every day at jam_alpha
+    cron.schedule(cronSchedule, () => {
+      console.log("Running alpha email notification task");
+      sendAlphaEmails();
+    });
+
+    console.log(`Alpha email notification cron job scheduled at ${hours}:${minutes}`);
+  } catch (error) {
+    console.error("Error initializing alpha email cron job:", error);
+  }
+};
+
+// Call the function to initialize the cron job when the application starts
+initializeAlphaEmailCronJob();
+
 
 // Fungsi untuk mendapatkan detail pengguna berdasarkan userId untuk menampilkan persentase kehadiran selama sebulan
 export const GetPercentageUser = async (req, res) => {

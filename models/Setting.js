@@ -8,13 +8,11 @@ const Setting = db.define(
   "setting",
   {
     id: {
-      // Mendefinisikan kolom id sebagai primary key dan auto-increment
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
     nama_perusahaan: {
-      // Mendefinisikan kolom name dengan validasi tidak boleh kosong dan panjang antara 3 hingga 100 karakter
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
@@ -23,7 +21,6 @@ const Setting = db.define(
       },
     },
     warna_primary: {
-      // Mendefinisikan kolom name dengan validasi tidak boleh kosong dan panjang antara 3 hingga 100 karakter
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
@@ -32,7 +29,6 @@ const Setting = db.define(
       },
     },
     warna_secondary: {
-      // Mendefinisikan kolom email dengan validasi tidak boleh kosong dan harus berupa format email yang valid
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
@@ -40,7 +36,6 @@ const Setting = db.define(
       },
     },
     warna_sidebar: {
-      // Mendefinisikan kolom password dengan validasi tidak boleh kosong
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
@@ -48,14 +43,35 @@ const Setting = db.define(
       },
     },
     logo: {
-      // Mendefinisikan kolom image tanpa validasi tambahan
       type: DataTypes.STRING,
     },
     url: {
-      // Mendefinisikan kolom url tanpa validasi tambahan
       type: DataTypes.STRING,
     },
-
+    kop_surat_1: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
+    },
+    kop_surat_2: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    kop_surat_3: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: {
+        notEmpty: true,
+      },
+    },
+    signature: {
+      type: DataTypes.STRING,
+    },
+    url_signature: {
+      type: DataTypes.STRING,
+    },
   },
   {
     // Mengatur nama tabel untuk tidak mengubah ke bentuk plural secara otomatis
