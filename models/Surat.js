@@ -4,15 +4,15 @@ import db from "../config/Database.js";
 const { DataTypes } = Sequelize;
 
 // Mendefinisikan model Users dengan id sebagai primary key
-const Setting = db.define(
-  "setting",
+const Surat = db.define(
+  "surat",
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    warna_primary: {
+    nama_perusahaan: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
@@ -20,19 +20,42 @@ const Setting = db.define(
         len: [3, 100],
       },
     },
-    warna_secondary: {
+    logo: {
+      type: DataTypes.STRING,
+    },
+    url: {
+      type: DataTypes.STRING,
+    },
+    kop_surat: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
         notEmpty: true,
       },
     },
-    warna_sidebar: {
+    alamat: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
         notEmpty: true,
       },
+    },
+    alamat_lengkap: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
+    },
+    tanggal: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    signature: {
+      type: DataTypes.STRING,
+    },
+    url_signature: {
+      type: DataTypes.STRING,
     },
   },
   {
@@ -41,4 +64,4 @@ const Setting = db.define(
   }
 );
 
-export default Setting;
+export default Surat;

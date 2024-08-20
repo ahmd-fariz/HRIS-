@@ -9,6 +9,7 @@ import UserRoute from "./routes/UserRoute.js";
 import AbsenRoute from "./routes/AbsenRoute.js";
 import AuthRoute from "./routes/AuthRoute.js";
 import SettingRoute from "./routes/SettingRoute.js";
+import SuratRoute from "./routes/SuratRoute.js";
 import RoleRoute from "./routes/RoleRoute.js";
 import AlphaRoute from "./routes/AlphaRoute.js";
 import HariLiburRoute from "./routes/HariLiburRoute.js";
@@ -62,6 +63,7 @@ app.use(UserRoute); // Rute untuk pengguna
 app.use(AbsenRoute); // Rute untuk absensi
 app.use(AuthRoute); // Rute untuk autentikasi
 app.use(SettingRoute); // Rute untuk setting
+app.use(SuratRoute); // Rute untuk surat
 app.use(RoleRoute); // Rute untuk role
 app.use(AlphaRoute); // Rute untuk alpha
 app.use(HariLiburRoute); // Rute untuk hari libur
