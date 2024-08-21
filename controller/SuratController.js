@@ -12,12 +12,14 @@ export const createSurat = async (req, res) => {
       kop_surat,
       alamat,
       alamat_lengkap,
+      ketua,
+      wakil_ketua
     } = req.body;
 
-    if (!nama_perusahaan || !kop_surat || !alamat || !alamat_lengkap) {
+    if (!nama_perusahaan || !kop_surat || !alamat || !alamat_lengkap || !ketua || !wakil_ketua) {
       return res.status(400).json({ 
-        msg: "Nama perusahaan, kop surat, alamat, dan alamat lengkap, harus diisi",
-        received: { nama_perusahaan, kop_surat, alamat, alamat_lengkap }
+        msg: "Semua field harus diisi",
+        received: { nama_perusahaan, kop_surat, alamat, alamat_lengkap, ketua, wakil_ketua }
       });
     }
 
@@ -25,6 +27,8 @@ export const createSurat = async (req, res) => {
     let url = null;
     let signature = null;
     let url_signature = null;
+    let signature_wakil = null;
+    let url_signature_wakil = null;
 
     // Handle file upload for logo
     if (req.files && req.files.logo) {
@@ -68,6 +72,27 @@ export const createSurat = async (req, res) => {
       url_signature = `${req.protocol}://${req.get("host")}/signature/${signature}`;
     }
     
+    // Handle file upload for wakil ketua signature
+    if (req.files && req.files.signature_wakil) {
+      const file = req.files.signature_wakil;
+      const ext = path.extname(file.name);
+      signature_wakil = file.md5 + ext;
+      const uploadPath = `./public/signature/${signature_wakil}`;
+
+      // Validate file type and size
+      const allowedType = [".png"];
+      if (!allowedType.includes(ext.toLowerCase())) {
+        return res.status(422).json({ msg: "Signature wakil ketua must be PNG" });
+      }
+      if (file.data.length > 5000000) {
+        return res.status(422).json({ msg: "Signature wakil ketua image must be less than 5 MB" });
+      }
+
+      // Save new file
+      await file.mv(uploadPath);
+      url_signature_wakil = `${req.protocol}://${req.get("host")}/signature/${signature_wakil}`;
+    }
+    
     const newSurat = await Surat.create({
       nama_perusahaan,
       logo,
@@ -75,8 +100,12 @@ export const createSurat = async (req, res) => {
       kop_surat,
       alamat,
       alamat_lengkap,
+      ketua,
       signature,
-      url_signature
+      url_signature,
+      wakil_ketua,
+      signature_wakil,
+      url_signature_wakil
     });
     
     res.status(201).json({ 
@@ -95,9 +124,12 @@ export const updateSurat = async (req, res) => {
     kop_surat,
     alamat,
     alamat_lengkap,
+    ketua,
+    wakil_ketua
   } = req.body;
   let fileName;
   let signatureFile;
+  let signatureWakilFile;
 
   try {
     const surat = await Surat.findOne({
@@ -171,6 +203,38 @@ export const updateSurat = async (req, res) => {
 
     const url_signature = `${req.protocol}://${req.get("host")}/signature/${signatureFile}`;
 
+    // Handle file upload for wakil ketua signature
+    if (req.files && req.files.signature_wakil) {
+      const file = req.files.signature_wakil;
+      const ext = path.extname(file.name);
+      signatureWakilFile = file.md5 + ext;
+      const uploadPath = `./public/signature/${signatureWakilFile}`;
+
+      // Validate file type and size
+      const allowedType = [".png"];
+      if (!allowedType.includes(ext.toLowerCase())) {
+        return res.status(422).json({ msg: "Signature wakil ketua must be PNG" });
+      }
+      if (file.data.length > 5000000) {
+        return res.status(422).json({ msg: "Signature wakil ketua image must be less than 5 MB" });
+      }
+
+      // Delete old file if exists for signature wakil
+      if (surat.signature_wakil) {
+        const oldFilePath = `./public/signature/${surat.signature_wakil}`;
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+
+      // Save new file
+      await file.mv(uploadPath);
+    } else {
+      signatureWakilFile = surat.signature_wakil; // Keep old signature wakil if no new signature is uploaded
+    }
+
+    const url_signature_wakil = `${req.protocol}://${req.get("host")}/signature/${signatureWakilFile}`;
+
     // Update surat
     await Surat.update(
       {
@@ -180,8 +244,12 @@ export const updateSurat = async (req, res) => {
         kop_surat: kop_surat || surat.kop_surat,
         alamat: alamat || surat.alamat,
         alamat_lengkap: alamat_lengkap || surat.alamat_lengkap,
+        ketua: ketua || surat.ketua,
         signature: signatureFile,
         url_signature: url_signature,
+        wakil_ketua: wakil_ketua || surat.wakil_ketua,
+        signature_wakil: signatureWakilFile,
+        url_signature_wakil: url_signature_wakil,
       },
       {
         where: {

@@ -47,10 +47,30 @@ const Surat = db.define(
         notEmpty: true,
       },
     },
+    ketua: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
+    },
     signature: {
       type: DataTypes.STRING,
     },
     url_signature: {
+      type: DataTypes.STRING,
+    },
+    wakil_ketua: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
+    },
+    signature_wakil: {
+      type: DataTypes.STRING,
+    },
+    url_signature_wakil: {
       type: DataTypes.STRING,
     },
   },
