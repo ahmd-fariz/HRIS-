@@ -47,10 +47,6 @@ const Surat = db.define(
         notEmpty: true,
       },
     },
-    tanggal: {
-      type: DataTypes.DATEONLY,
-      allowNull: false,
-    },
     signature: {
       type: DataTypes.STRING,
     },

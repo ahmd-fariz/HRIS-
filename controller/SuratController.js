@@ -2,13 +2,99 @@ import path from "path";
 import fs from "fs";
 import Surat from "../models/Surat.js";
 
+// Fungsi untuk membuat surat baru
+export const createSurat = async (req, res) => {
+  try {
+    console.log("Received body:", req.body);
+
+    const {
+      nama_perusahaan,
+      kop_surat,
+      alamat,
+      alamat_lengkap,
+    } = req.body;
+
+    if (!nama_perusahaan || !kop_surat || !alamat || !alamat_lengkap) {
+      return res.status(400).json({ 
+        msg: "Nama perusahaan, kop surat, alamat, dan alamat lengkap, harus diisi",
+        received: { nama_perusahaan, kop_surat, alamat, alamat_lengkap }
+      });
+    }
+
+    let logo = null;
+    let url = null;
+    let signature = null;
+    let url_signature = null;
+
+    // Handle file upload for logo
+    if (req.files && req.files.logo) {
+      const file = req.files.logo;
+      const ext = path.extname(file.name);
+      logo = file.md5 + ext;
+      const uploadPath = `./public/logo/${logo}`;
+
+      // Validate file type and size
+      const allowedType = [".png", ".jpg", ".jpeg"];
+      if (!allowedType.includes(ext.toLowerCase())) {
+        return res.status(422).json({ msg: "Invalid Images for logo" });
+      }
+      if (file.data.length > 5000000) {
+        return res.status(422).json({ msg: "Logo image must be less than 5 MB" });
+      }
+
+      // Save new file
+      await file.mv(uploadPath);
+      url = `${req.protocol}://${req.get("host")}/logo/${logo}`;
+    }
+
+    // Handle file upload for signature
+    if (req.files && req.files.signature) {
+      const file = req.files.signature;
+      const ext = path.extname(file.name);
+      signature = file.md5 + ext;
+      const uploadPath = `./public/signature/${signature}`;
+
+      // Validate file type and size
+      const allowedType = [".png"];
+      if (!allowedType.includes(ext.toLowerCase())) {
+        return res.status(422).json({ msg: "Signature must be PNG" });
+      }
+      if (file.data.length > 5000000) {
+        return res.status(422).json({ msg: "Signature image must be less than 5 MB" });
+      }
+
+      // Save new file
+      await file.mv(uploadPath);
+      url_signature = `${req.protocol}://${req.get("host")}/signature/${signature}`;
+    }
+    
+    const newSurat = await Surat.create({
+      nama_perusahaan,
+      logo,
+      url,
+      kop_surat,
+      alamat,
+      alamat_lengkap,
+      signature,
+      url_signature
+    });
+    
+    res.status(201).json({ 
+      msg: "Surat berhasil dibuat", 
+      surat: newSurat
+    });
+  } catch (error) {
+    console.error("Error in createSurat:", error);
+    res.status(500).json({ msg: error.message });
+  }
+};
+
 export const updateSurat = async (req, res) => {
   const {
     nama_perusahaan,
     kop_surat,
     alamat,
     alamat_lengkap,
-    tanggal
   } = req.body;
   let fileName;
   let signatureFile;
@@ -94,7 +180,6 @@ export const updateSurat = async (req, res) => {
         kop_surat: kop_surat || surat.kop_surat,
         alamat: alamat || surat.alamat,
         alamat_lengkap: alamat_lengkap || surat.alamat_lengkap,
-        tanggal: tanggal || surat.tanggal,
         signature: signatureFile,
         url_signature: url_signature,
       },
@@ -133,95 +218,6 @@ export const getSuratById = async (req, res) => {
       return res.status(404).json({ msg: "Surat tidak ditemukan" });
     res.status(200).json(surat);
   } catch (error) {
-    res.status(500).json({ msg: error.message });
-  }
-};
-
-// Fungsi untuk membuat surat baru
-export const createSurat = async (req, res) => {
-  try {
-    console.log("Received body:", req.body);
-
-    const {
-      nama_perusahaan,
-      kop_surat,
-      alamat,
-      alamat_lengkap,
-      tanggal
-    } = req.body;
-
-    if (!nama_perusahaan || !kop_surat || !alamat || !alamat_lengkap || !tanggal) {
-      return res.status(400).json({ 
-        msg: "Nama perusahaan, kop surat, alamat, alamat lengkap, dan tanggal harus diisi",
-        received: { nama_perusahaan, kop_surat, alamat, alamat_lengkap, tanggal }
-      });
-    }
-
-    let logo = null;
-    let url = null;
-    let signature = null;
-    let url_signature = null;
-
-    // Handle file upload for logo
-    if (req.files && req.files.logo) {
-      const file = req.files.logo;
-      const ext = path.extname(file.name);
-      logo = file.md5 + ext;
-      const uploadPath = `./public/logo/${logo}`;
-
-      // Validate file type and size
-      const allowedType = [".png", ".jpg", ".jpeg"];
-      if (!allowedType.includes(ext.toLowerCase())) {
-        return res.status(422).json({ msg: "Invalid Images for logo" });
-      }
-      if (file.data.length > 5000000) {
-        return res.status(422).json({ msg: "Logo image must be less than 5 MB" });
-      }
-
-      // Save new file
-      await file.mv(uploadPath);
-      url = `${req.protocol}://${req.get("host")}/logo/${logo}`;
-    }
-
-    // Handle file upload for signature
-    if (req.files && req.files.signature) {
-      const file = req.files.signature;
-      const ext = path.extname(file.name);
-      signature = file.md5 + ext;
-      const uploadPath = `./public/signature/${signature}`;
-
-      // Validate file type and size
-      const allowedType = [".png"];
-      if (!allowedType.includes(ext.toLowerCase())) {
-        return res.status(422).json({ msg: "Signature must be PNG" });
-      }
-      if (file.data.length > 5000000) {
-        return res.status(422).json({ msg: "Signature image must be less than 5 MB" });
-      }
-
-      // Save new file
-      await file.mv(uploadPath);
-      url_signature = `${req.protocol}://${req.get("host")}/signature/${signature}`;
-    }
-    
-    const newSurat = await Surat.create({
-      nama_perusahaan,
-      logo,
-      url,
-      kop_surat,
-      alamat,
-      alamat_lengkap,
-      tanggal,
-      signature,
-      url_signature
-    });
-    
-    res.status(201).json({ 
-      msg: "Surat berhasil dibuat", 
-      surat: newSurat
-    });
-  } catch (error) {
-    console.error("Error in createSurat:", error);
     res.status(500).json({ msg: error.message });
   }
 };
