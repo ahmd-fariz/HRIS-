@@ -1,6 +1,7 @@
 import express from "express";
 import nodemailer from "nodemailer";
 import { Sequelize } from 'sequelize';
+import fs from 'fs';
 import path from "path";
 import cron from "node-cron";
 import Absen from "../models/Absen.js";
@@ -212,7 +213,7 @@ export const AbsenKeluar = async (req, res) => {
 };
 
 export const GeoLocation = async (req, res) => {
-  const { userId, lat, long, keterangan, alasan } = req.body;
+  const { userId, lat, long, keterangan, alasan, foto } = req.body;
 
   console.log("Request received to update absen for userId:", userId);
 
@@ -221,48 +222,60 @@ export const GeoLocation = async (req, res) => {
   const waktu_datang = today.toLocaleTimeString("en-GB");
 
   try {
-    // Check if a file is uploaded
-    if (!req.file) {
+    // Pastikan `foto` ada dan berbentuk string
+    if (!foto) {
       return res.status(400).json({ msg: "No file uploaded" });
     }
 
-    const foto = req.files.file;
-    const fileSize = foto.data.length;
-    const ext = path.extname(foto.name);
-    const fileName = foto.md5 + ext;
-    const allowedType = [".png", ".jpg", ".jpeg"];
-
-    if (!allowedType.includes(ext.toLowerCase())) {
-      return res.status(422).json({ msg: "Invalid Images" });
+    // Ekstrak data `base64` dan tipe gambar (ekstensi file)
+    const matches = foto.match(/^data:image\/(png|jpg|jpeg);base64,(.+)$/);
+    if (!matches) {
+      return res.status(422).json({ msg: "Invalid Image Data" });
     }
 
-    if (fileSize > 5000000) {
-      return res.status(422).json({ msg: "Image must be less than 5 MB" });
-    }
+    const ext = matches[1];  // Ekstrak ekstensi (png/jpg/jpeg)
+    const base64Data = matches[2];  // Ekstrak data `base64` gambar
 
-    // Save new file to directory
-    foto.mv(`./public/geolocation/${fileName}`, (err) => {
-      if (err) return res.status(500).json({ msg: err.message });
+    // Generate nama file yang unik
+    const fileName = `${userId}-${Date.now()}.${ext}`;
+    const filePath = path.join('./public/geolocation', fileName);  // Path untuk menyimpan file
+
+    // Konversi `base64` menjadi buffer binary
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Simpan buffer sebagai file di direktori yang ditentukan
+    fs.writeFile(filePath, buffer, async (err) => {
+      if (err) {
+        return res.status(500).json({ msg: err.message });
+      }
+
+      // Buat URL file gambar yang baru disimpan
+      const url = `${req.protocol}://${req.get("host")}/geolocation/${fileName}`;
+
+      try {
+        // Simpan data absen ke database
+        const absen = await Absen.create({
+          userId,
+          tanggal: date,
+          lat,
+          long,
+          waktu_datang,
+          keterangan,
+          foto: fileName,
+          url_foto: url,
+          alasan,
+        });
+
+        console.log("Absen Geolocation:", absen);
+        res.status(200).json({ msg: "Berhasil Update Geolocation", absen });
+
+      } catch (error) {
+        console.error("Error updating absen:", error);
+        res.status(500).json({ msg: error.message });
+      }
     });
-
-    // Create new image URL
-    const url = `${req.protocol}://${req.get("host")}/geolocation/${fileName}`;
-
-    const absen = await Absen.create({
-      userId,
-      tanggal: date,
-      lat,
-      long,
-      waktu_datang,
-      keterangan,
-      foto: fileName,
-      url_foto: url,
-      alasan,
-    });
-    console.log("Absen Geolocation:", absen);
-    res.status(200).json({ msg: "Berhasil Update Geolocation", absen });
   } catch (error) {
-    console.error("Error updating absen:", error);
+    console.error("Error processing geolocation:", error);
     res.status(500).json({ msg: error.message });
   }
 };
