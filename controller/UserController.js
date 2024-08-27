@@ -117,7 +117,7 @@ export const GetUsersById = async (req, res) => {
 export const GetUsersByRole = async (req, res) => {
   try {
     const response = await UserModel.findAll({
-      attributes: ["id", "name", "email", "roleId", "image", "url_foto_absen"], // Mengambil atribut id, name, email, roleId, image, dan url_foto_absen dari model UserModel
+      attributes: ["id", "name", "email", "roleId", "image", "url_foto_absen", "status"], // Mengambil atribut id, name, email, roleId, image, dan url_foto_absen dari model UserModel
       where: {
         roleId: req.params.roleId, // Mencari pengguna berdasarkan roleId dari parameter route
       },
