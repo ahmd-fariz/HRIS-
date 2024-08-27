@@ -339,3 +339,32 @@ export const UpdateForFotoAbsen = async (req, res) => {
     res.status(400).json({ msg: error.message }); // Mengirimkan respon dengan status 400 jika terjadi kesalahan saat memperbarui data
   }
 };
+
+// Fungsi untuk memperbarui status pengguna
+export const UpdateUserStatus = async (req, res) => {
+  const user = await UserModel.findOne({
+    where: {
+      id: req.params.id, // Mencari pengguna berdasarkan id dari parameter route
+    },
+  });
+
+  if (!user) return res.status(404).json({ msg: "User Tidak di Temukan" }); // Mengirimkan respon dengan status 404 jika pengguna tidak ditemukan
+
+  const { status } = req.body; // Mengambil status baru dari body permintaan
+
+  try {
+    await UserModel.update(
+      {
+        status, // Memperbarui status pengguna
+      },
+      {
+        where: {
+          id: user.id, // Memperbarui data pengguna berdasarkan id
+        },
+      }
+    );
+    res.status(200).json({ msg: "Status Berhasil Diperbarui" }); // Mengirimkan respon dengan status 200 jika pembaruan berhasil
+  } catch (error) {
+    res.status(400).json({ msg: error.message }); // Mengirimkan respon dengan status 400 jika terjadi kesalahan saat memperbarui data
+  }
+};

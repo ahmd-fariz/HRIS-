@@ -9,6 +9,7 @@ import {
   UpdateForFotoAbsen,
   UpdatePotoProfile,
   UpdateUser,
+  UpdateUserStatus,
 } from "../controller/UserController.js";
 import { verifyUser, Role } from "../middleware/AuthUser.js";
 
@@ -25,6 +26,7 @@ router.get("/userbyrole/:roleId", GetUsersByRole);
 router.post("/users", CreateUser);
 router.patch("/userAbsen/:id", UpdateForFotoAbsen);
 router.patch("/updateuser/:id", UpdateUser);
+router.patch("/update/status/:id", UpdateUserStatus);
 router.delete("/users/:id", DeleteUser);
 
 export default router;
