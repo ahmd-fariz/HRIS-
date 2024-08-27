@@ -121,7 +121,7 @@ const checkAndMarkAbsentees = async () => {
       return;
     }
 
-    // Get all user IDs excluding Managers and Admins
+    // Get all user IDs excluding Managers, Admins, and Non-Aktif users
     const allUsers = await UserModel.findAll({
       include: {
         model: Role,
@@ -132,10 +132,12 @@ const checkAndMarkAbsentees = async () => {
           },
         },
       },
-      attributes: ["id"],
+      attributes: ["id", "status"], // Tambahkan status pengguna
     });
 
-    const allUserIds = allUsers.map((user) => user.id);
+    // Filter out Non-Aktif users
+    const activeUsers = allUsers.filter(user => user.status === 'Aktif');
+    const allUserIds = activeUsers.map((user) => user.id);
 
     // Get user IDs who have checked in today
     const presentUsers = await Absen.findAll({
