@@ -155,12 +155,13 @@ const checkAndMarkAbsentees = async () => {
     console.log(`Absent users for ${date}:`, absentUserIds);
 
     // Mark absent users
+    const waktuDatang = now.toTimeString().split(" ")[0]; // Ambil waktu lengkap (HH:MM:SS)
     const newAbsens = absentUserIds.map((userId) => ({
       userId,
       tanggal: date,
       lat: null,
       long: null,
-      waktu_datang: null,
+      waktu_datang: waktuDatang, // Simpan waktu lengkap (HH:MM:SS)
       keterangan: "Alpha",
     }));
 
@@ -175,12 +176,12 @@ const checkAndMarkAbsentees = async () => {
   }
 };
 
-
 // Schedule cron job to run every minute
 cron.schedule("* * * * *", checkAndMarkAbsentees);
 
 // Run the function once to initialize after truncate
 checkAndMarkAbsentees();
+
 
 // Function to update the checkout time
 export const AbsenKeluar = async (req, res) => {
