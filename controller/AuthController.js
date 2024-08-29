@@ -19,11 +19,6 @@ export const Login = async (req, res) => {
       return res.status(404).json({ msg: "User Tidak ditemukan" });
     }
 
-    // Memeriksa status pengguna
-    if (user.status === "Non-Aktif") {
-      return res.status(403).json({ msg: "Akun Anda Non-Aktif" }); // Menolak login jika non-aktif
-    }
-
     // Memverifikasi password yang diinput dengan password yang ada di database
     const match = await argon2.verify(user.password, req.body.password);
 
@@ -44,18 +39,22 @@ export const Login = async (req, res) => {
     });
 
     // Mengambil data pengguna untuk dikirim kembali
-    const { id, name, email, roleId, image, url } = user;
+    const { id, name, email, roleId, image, url, status } = user;
     const nama_role = role ? role.nama_role : null; // Mendapatkan nama role
 
+    // Memeriksa status pengguna
+    if (user.status === "Non-Aktif") {
+      return res.status(403).json({ msg: "Akun Anda Non-Aktif" }); // Menolak login jika non-aktif
+    }
+
     // Mengirim respons sukses dengan data pengguna
-    res.status(200).json({ id, name, email, roleId, nama_role, image, url });
+    res.status(200).json({ id, name, email, roleId, nama_role, image, url, status });
   } catch (error) {
     // Menangani kesalahan dan mengirim respons dengan status 500
     console.error("Error logging in:", error); // Log kesalahan
     res.status(500).json({ msg: "Terjadi kesalahan pada server" });
   }
 };
-
 
 // Fungsi untuk mendapatkan informasi pengguna yang sedang login
 export const Me = async (req, res) => {
