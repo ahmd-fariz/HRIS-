@@ -19,6 +19,12 @@ export const Login = async (req, res) => {
       return res.status(404).json({ msg: "User Tidak ditemukan" });
     }
 
+    // Memeriksa status pengguna
+    if (user.status === "Non-Aktif") {
+      console.log("Elu udah out guoblog");
+      return res.status(403).json({ msg: "Akun Anda Non-Aktif" }); // Menolak login jika non-aktif
+    }
+
     // Memverifikasi password yang diinput dengan password yang ada di database
     const match = await argon2.verify(user.password, req.body.password);
 
@@ -39,11 +45,11 @@ export const Login = async (req, res) => {
     });
 
     // Mengambil data pengguna untuk dikirim kembali
-    const { id, name, email, roleId, image, url, status } = user;
+    const { id, name, email, roleId, image, url } = user;
     const nama_role = role ? role.nama_role : null; // Mendapatkan nama role
 
     // Mengirim respons sukses dengan data pengguna
-    res.status(200).json({ id, name, email, roleId, nama_role, image, url, status });
+    res.status(200).json({ id, name, email, roleId, nama_role, image, url });
   } catch (error) {
     // Menangani kesalahan dan mengirim respons dengan status 500
     console.error("Error logging in:", error); // Log kesalahan
