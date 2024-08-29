@@ -1,4 +1,3 @@
-import { json } from "sequelize";
 import User from "../models/UserModel.js";
 import Role from "../models/Role.js";
 import argon2 from "argon2";

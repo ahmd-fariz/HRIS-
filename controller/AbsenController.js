@@ -132,7 +132,12 @@ const checkAndMarkAbsentees = async () => {
           },
         },
       },
-      attributes: ["id", "status"], // Tambahkan status pengguna
+      attributes: ["id", "status"],
+      where: {
+        status: {
+          [Sequelize.Op.notIn]: ["Non-Aktif"], // Exclude Managers and Admins
+        },
+      },
     });
 
     // Filter out Non-Aktif users
