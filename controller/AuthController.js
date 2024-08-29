@@ -21,7 +21,6 @@ export const Login = async (req, res) => {
 
     // Memeriksa status pengguna
     if (user.status === "Non-Aktif") {
-      console.log("Elu udah out guoblog");
       return res.status(403).json({ msg: "Akun Anda Non-Aktif" }); // Menolak login jika non-aktif
     }
 
