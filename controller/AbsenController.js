@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 
 import { Sequelize } from "sequelize";
 import fs from "fs";
-import path from "path";
+import path, { resolve } from "path";
 import Absen from "../models/Absen.js";
 import UserModel from "../models/UserModel.js";
 import Alpha from "../models/Alpha.js";
@@ -85,6 +85,20 @@ export const createAbsen = async(req, res) => {
     } catch (error) {
         console.error("Error creating absen:", error);
         res.status(500).json({ msg: error.message });
+    }
+
+    // Buat mengirim email
+    const absenData = {
+        userId: req.body.userId,
+        keterangan: req.body.keterangan, // "Alpha" atau lainnya
+        tanggal: new Date().toISOString().split("T")[0], // Tanggal hari ini
+    };
+
+    try {
+        await saveAbsenAndSendEmail(absenData);
+        res.status(201).json({ message: "Absen saved and email sent if Alpha." });
+    } catch (error) {
+        res.status(500).json({ message: "Error saving absen or sending email." });
     }
 };
 
@@ -296,141 +310,6 @@ export const GeoLocation = async(req, res) => {
     }
 };
 
-dotenv.config();
-
-const OAuth2 = google.auth.OAuth2;
-
-const OAuth2Client = new OAuth2(
-    process.env.GOOGLE_GMAIL_CLIENT_ID,
-    process.env.GOOGLE_GMAIL_CLIENT_SECRET,
-    process.env.GOOGLE_GMAIL_REDIRECT_URL
-);
-
-OAuth2Client.setCredentials({
-    refresh_token: process.env.GOOGLE_GMAIL_REFRESH_TOKEN,
-});
-
-async function getAccessToken() {
-    try {
-        const { token } = await OAuth2Client.getAccessToken();
-        return token;
-    } catch (err) {
-        console.error("Failed to create access token", err);
-        throw new Error("Failed to create access token");
-    }
-}
-
-// Configure nodemailer transporter
-const createTransporter = async() => {
-    const accessToken = await getAccessToken();
-
-    return nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            type: "OAuth2",
-            user: process.env.EMAIL_USER, // Your email address
-            clientId: process.env.GOOGLE_GMAIL_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_GMAIL_CLIENT_SECRET,
-            refreshToken: process.env.GOOGLE_GMAIL_REFRESH_TOKEN,
-            accessToken: accessToken,
-        },
-    });
-};
-
-// Function to get users marked as 'alpha' today along with their emails
-const getUsersWithAlphaStatusToday = async() => {
-    const today = new Date().toISOString().split("T")[0]; // Format date as YYYY-MM-DD
-    try {
-        const absens = await Absen.find({
-            keterangan: "Alpha",
-            tanggal: today,
-        }).populate("userId");
-
-        // Extract user information including email
-        const users = absens.map((absen) => {
-            const { _id, name, email } = absen.userId;
-            return { id: _id, name, email };
-        });
-
-        return users;
-    } catch (error) {
-        console.error("Error fetching users with alpha status:", error);
-        throw error;
-    }
-};
-
-// Function to send email to users marked as 'alpha'
-const sendAlphaEmails = async() => {
-    try {
-        const users = await getUsersWithAlphaStatusToday();
-        if (users.length === 0) {
-            console.log("No users marked as 'Alpha' today, skipping email sending.");
-            return;
-        }
-
-        const transporter = await createTransporter();
-
-        const emailPromises = users.map(async(user) => {
-            if (!user.email) {
-                console.log(`User ID ${user.id} does not have an email address.`);
-                return;
-            }
-
-            const mailOptions = {
-                from: process.env.EMAIL_USER,
-                to: user.email,
-                subject: "Attendance Reminder",
-                text: `Dear ${user.name},
-                       You have been marked as 'Alpha' today. Please ensure to adhere to the attendance policies.
-                       Best regards,
-                       PT. Grage Media Technology`,
-            };
-
-            await transporter.sendMail(mailOptions);
-            console.log(`Email sent to ${user.email}`);
-        });
-
-        await Promise.all(emailPromises);
-        console.log("All emails sent.");
-    } catch (error) {
-        console.error("Error sending alpha emails:", error);
-    }
-};
-
-// Initialize cron job after ensuring the server is ready
-const initializeAlphaEmailCronJob = async() => {
-    try {
-        const alphaRecord = await Alpha.findOne({
-            where: { id: 1 },
-            attributes: ["jam_alpha"],
-        });
-
-        if (!alphaRecord) {
-            console.error("Alpha record not found.");
-            return;
-        }
-
-        const jamAlpha = alphaRecord.jam_alpha;
-        const [hours, minutes] = jamAlpha.split(":").map(Number);
-
-        // Schedule email sending task based on 'jam_alpha'
-        const cronSchedule = `${minutes} ${hours} * * *`; // Every day at jam_alpha
-        cron.schedule(cronSchedule, () => {
-            console.log("Running alpha email notification task");
-            sendAlphaEmails();
-        });
-
-        console.log(
-            `Alpha email notification cron job scheduled at ${hours}:${minutes}`
-        );
-    } catch (error) {
-        console.error("Error initializing alpha email cron job:", error);
-    }
-};
-
-// Call the function to initialize the cron job when the application starts
-initializeAlphaEmailCronJob();
-
 // Fungsi untuk mendapatkan detail pengguna berdasarkan userId untuk menampilkan persentase kehadiran selama sebulan
 export const GetPercentageUser = async(req, res) => {
     try {
@@ -445,5 +324,152 @@ export const GetPercentageUser = async(req, res) => {
         res.status(500).json({ msg: error.message }); // Mengirimkan respon dengan status 500 dan pesan error jika terjadi kesalahan
     }
 };
+
+// Bagian untuk mengirimkan email, sangat rumit
+dotenv.config();
+
+const OAuth2 = google.auth.OAuth2;
+
+const OAuth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_GMAIL_CLIENT_ID,
+    process.env.GOOGLE_GMAIL_CLIENT_SECRET,
+    process.env.GOOGLE_GMAIL_REDIRECT_URL
+);
+
+OAuth2Client.setCredentials({
+    refresh_token: process.env.GOOGLE_GMAIL_REFRESH_TOKEN,
+});
+
+const accessToken = await OAuth2Client.getAccessToken(); // Dapatkan access token secara langsung
+
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        type: "OAuth2",
+        user: process.env.EMAIL_USER,
+        pass: process.env.PASS_USER,
+        clientId: process.env.GOOGLE_GMAIL_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_GMAIL_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_GMAIL_REFRESH_TOKEN,
+        accessToken: accessToken.token,
+    },
+});
+
+// Function to retry sending email with delay
+const sendEmailWithRetry = async(mailOptions, retries = 3, delay = 30000) => {
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Email sent to ${mailOptions.to}`);
+    } catch (error) {
+        if (retries > 0) {
+            console.log(`Retrying in ${delay / 1000} seconds...`);
+            setTimeout(() => sendEmailWithRetry(mailOptions, retries - 1), delay);
+        } else {
+            console.error(`Failed to send email to ${mailOptions.to}: `, error);
+        }
+    }
+};
+
+// Function to get users marked as 'alpha' today along with their emails
+const getUsersWithAlphaStatusToday = async() => {
+    const today = new Date().toISOString().split("T")[0]; // Format date as YYYY-MM-DD
+    try {
+        const absens = await Absen.findAll({
+            where: {
+                keterangan: "Alpha",
+                tanggal: today,
+            },
+            attributes: ["userId"],
+            raw: true,
+        });
+
+        const userIds = absens.map((absen) => absen.userId);
+        const users = await UserModel.findAll({
+            where: {
+                id: userIds,
+            },
+            attributes: ["id", "name", "email"],
+            raw: true,
+        });
+
+        return users;
+    } catch (error) {
+        console.error("Error fetching users with alpha status:", error);
+        throw error;
+    }
+};
+
+// Function to send emails in batches with delay between batches
+const sendEmailsInBatch = async(users, batchSize = 10, delay = 30000) => {
+    for (let i = 0; i < users.length; i += batchSize) {
+        const batch = users.slice(i, i + batchSize);
+        const emailPromises = batch.map((user) => {
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: user.email,
+                subject: "Attendance Reminder",
+                text: `Dear ${user.name},\n\nYou have been marked as 'Alpha' today. Please ensure to adhere to the attendance policies.\n\nBest regards,\nPT. Grage Media Technology`,
+            };
+            return sendEmailWithRetry(mailOptions);
+        });
+
+        await Promise.all(emailPromises);
+        console.log(`Batch ${i / batchSize + 1} sent.`);
+
+        if (i + batchSize < users.length) {
+            await new Promise((resolve) => setTimeout(resolve, delay)); // Delay before next batch
+        }
+    }
+};
+
+// Function to send email to users marked as 'alpha'
+const sendAlphaEmails = async() => {
+    try {
+        const users = await getUsersWithAlphaStatusToday();
+        if (users.length === 0) {
+            console.log("No users marked as 'Alpha' today, skipping email sending.");
+            return;
+        }
+        await sendEmailsInBatch(users); // Mengirim email secara batch
+        console.log("All emails sent.");
+    } catch (error) {
+        console.error("Error sending alpha emails:", error);
+    }
+};
+
+// Function to save Absen and send email if status is Alpha
+const saveAbsenAndSendEmail = async(absenData) => {
+    try {
+        const newAbsen = new Absen(absenData); // asumsikan absenData berisi data yang sesuai
+        await newAbsen.save();
+
+        if (newAbsen.keterangan === "Alpha") {
+            const user = await UserModel.findByPk(newAbsen.userId);
+            if (user && user.email) {
+                await sendAlphaEmails();
+            }
+        }
+    } catch (error) {
+        console.error("Error saving absen or sending email:", error);
+    }
+};
+
+// Initialize cron job after ensuring the server is ready
+const initializeAlphaEmailCronJob = async() => {
+    try {
+        const cronSchedule = `* * * * *`; // Setiap jam, sesuaikan dengan kebutuhan
+        cron.schedule(cronSchedule, () => {
+            console.log("Running alpha email notification task");
+            sendAlphaEmails();
+        });
+
+        console.log(`Alpha email notification cron job scheduled.`);
+    } catch (error) {
+        console.error("Error initializing alpha email cron job:", error);
+    }
+};
+
+// Call the function to initialize the cron job when the application starts
+initializeAlphaEmailCronJob();
 
 export default router;
