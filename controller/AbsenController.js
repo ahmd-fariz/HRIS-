@@ -1,9 +1,13 @@
 import express from "express";
+// Buat email dan jalan otomatis
 import nodemailer from "nodemailer";
+import { google } from "googleapis";
+import cron from "node-cron";
+import dotenv from "dotenv";
+
 import { Sequelize } from "sequelize";
 import fs from "fs";
 import path from "path";
-import cron from "node-cron";
 import Absen from "../models/Absen.js";
 import UserModel from "../models/UserModel.js";
 import Alpha from "../models/Alpha.js";
@@ -292,16 +296,48 @@ export const GeoLocation = async(req, res) => {
     }
 };
 
-// Configure nodemailer transporter
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: "rfqfrashsym@gmail.com", // Ganti dengan email Anda
-        pass: "password", // Ganti dengan App Password jika 2FA diaktifkan
-    },
+dotenv.config();
+
+const OAuth2 = google.auth.OAuth2;
+
+const OAuth2Client = new OAuth2(
+    process.env.GOOGLE_GMAIL_CLIENT_ID,
+    process.env.GOOGLE_GMAIL_CLIENT_SECRET,
+    process.env.GOOGLE_GMAIL_REDIRECT_URL
+);
+
+OAuth2Client.setCredentials({
+    refresh_token: process.env.GOOGLE_GMAIL_REFRESH_TOKEN,
 });
 
-// Function to get users marked as 'alpha' today
+async function getAccessToken() {
+    try {
+        const { token } = await OAuth2Client.getAccessToken();
+        return token;
+    } catch (err) {
+        console.error("Failed to create access token", err);
+        throw new Error("Failed to create access token");
+    }
+}
+
+// Configure nodemailer transporter
+const createTransporter = async() => {
+    const accessToken = await getAccessToken();
+
+    return nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            type: "OAuth2",
+            user: process.env.EMAIL_USER, // Your email address
+            clientId: process.env.GOOGLE_GMAIL_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_GMAIL_CLIENT_SECRET,
+            refreshToken: process.env.GOOGLE_GMAIL_REFRESH_TOKEN,
+            accessToken: accessToken,
+        },
+    });
+};
+
+// Function to get users marked as 'alpha' today along with their emails
 const getUsersWithAlphaStatusToday = async() => {
     const today = new Date().toISOString().split("T")[0]; // Format date as YYYY-MM-DD
     try {
@@ -309,7 +345,14 @@ const getUsersWithAlphaStatusToday = async() => {
             keterangan: "Alpha",
             tanggal: today,
         }).populate("userId");
-        return absens.map((absen) => absen.userId);
+
+        // Extract user information including email
+        const users = absens.map((absen) => {
+            const { _id, name, email } = absen.userId;
+            return { id: _id, name, email };
+        });
+
+        return users;
     } catch (error) {
         console.error("Error fetching users with alpha status:", error);
         throw error;
@@ -325,6 +368,8 @@ const sendAlphaEmails = async() => {
             return;
         }
 
+        const transporter = await createTransporter();
+
         const emailPromises = users.map(async(user) => {
             if (!user.email) {
                 console.log(`User ID ${user.id} does not have an email address.`);
@@ -332,7 +377,7 @@ const sendAlphaEmails = async() => {
             }
 
             const mailOptions = {
-                from: "rfqfrashsym@gmail.com",
+                from: process.env.EMAIL_USER,
                 to: user.email,
                 subject: "Attendance Reminder",
                 text: `Dear ${user.name},\n\nYou have been marked as 'Alpha' today. Please ensure to adhere to the attendance policies.\n\nBest regards,\nPT. Grage Media Technology`,
