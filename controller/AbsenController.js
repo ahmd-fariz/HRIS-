@@ -127,7 +127,7 @@ const checkAndMarkAbsentees = async() => {
 
         if (isHoliday) {
             console.log(
-                `Today (${date}) is a holiday (${isHoliday.nama_libur}), no absentees will be marked.`
+                Today($ { date }) is a holiday($ { isHoliday.nama_libur }), no absentees will be marked.
             );
             return;
         }
@@ -170,7 +170,8 @@ const checkAndMarkAbsentees = async() => {
             (userId) => !presentUserIds.includes(userId)
         );
 
-        console.log(`Absent users for ${date}:`, absentUserIds);
+        console.log(Absent users
+            for $ { date }: , absentUserIds);
 
         // Mark absent users
         const waktuDatang = now.toTimeString().split(" ")[0]; // Ambil waktu lengkap (HH:MM:SS)
@@ -185,9 +186,12 @@ const checkAndMarkAbsentees = async() => {
 
         if (newAbsens.length > 0) {
             await Absen.bulkCreate(newAbsens);
-            console.log(`${newAbsens.length} users marked as Alpha for ${date}`);
+            console.log($ { newAbsens.length }
+                users marked as Alpha
+                for $ { date });
         } else {
-            console.log(`No users to mark as Alpha for ${date}`);
+            console.log(No users to mark as Alpha
+                for $ { date });
         }
     } catch (error) {
         console.error("Error checking and marking absentees:", error);
@@ -237,25 +241,25 @@ export const GeoLocation = async(req, res) => {
     const waktu_datang = today.toLocaleTimeString("en-GB");
 
     try {
-        // Pastikan `foto` ada dan berbentuk string
+        // Pastikan foto ada dan berbentuk string
         if (!foto) {
             return res.status(400).json({ msg: "No file uploaded" });
         }
 
-        // Ekstrak data `base64` dan tipe gambar (ekstensi file)
+        // Ekstrak data base64 dan tipe gambar (ekstensi file)
         const matches = foto.match(/^data:image\/(png|jpg|jpeg);base64,(.+)$/);
         if (!matches) {
             return res.status(422).json({ msg: "Invalid Image Data" });
         }
 
         const ext = matches[1]; // Ekstrak ekstensi (png/jpg/jpeg)
-        const base64Data = matches[2]; // Ekstrak data `base64` gambar
+        const base64Data = matches[2]; // Ekstrak data base64 gambar
 
         // Generate nama file yang unik
-        const fileName = `${userId}-${Date.now()}.${ext}`;
+        const fileName = $ { userId } - $ { Date.now() }.$ { ext };
         const filePath = path.join("./public/geolocation", fileName); // Path untuk menyimpan file
 
-        // Konversi `base64` menjadi buffer binary
+        // Konversi base64 menjadi buffer binary
         const buffer = Buffer.from(base64Data, "base64");
 
         // Simpan buffer sebagai file di direktori yang ditentukan
@@ -372,7 +376,8 @@ const sendAlphaEmails = async() => {
 
         const emailPromises = users.map(async(user) => {
             if (!user.email) {
-                console.log(`User ID ${user.id} does not have an email address.`);
+                console.log(User ID $ { user.id }
+                    does not have an email address.);
                 return;
             }
 
@@ -380,11 +385,14 @@ const sendAlphaEmails = async() => {
                 from: process.env.EMAIL_USER,
                 to: user.email,
                 subject: "Attendance Reminder",
-                text: `Dear ${user.name},\n\nYou have been marked as 'Alpha' today. Please ensure to adhere to the attendance policies.\n\nBest regards,\nPT. Grage Media Technology`,
+                text: Dear $ { user.name },
+                \n\ nYou have been marked as 'Alpha'
+                today.Please ensure to adhere to the attendance policies.\n\ nBest regards,
+                \nPT.Grage Media Technology,
             };
 
             await transporter.sendMail(mailOptions);
-            console.log(`Email sent to ${user.email}`);
+            console.log(Email sent to $ { user.email });
         });
 
         await Promise.all(emailPromises);
@@ -411,14 +419,15 @@ const initializeAlphaEmailCronJob = async() => {
         const [hours, minutes] = jamAlpha.split(":").map(Number);
 
         // Schedule email sending task based on 'jam_alpha'
-        const cronSchedule = `${minutes} ${hours} * * *`; // Every day at jam_alpha
+        const cronSchedule = $ { minutes }
+        $ { hours } * * * ; // Every day at jam_alpha
         cron.schedule(cronSchedule, () => {
             console.log("Running alpha email notification task");
             sendAlphaEmails();
         });
 
         console.log(
-            `Alpha email notification cron job scheduled at ${hours}:${minutes}`
+            Alpha email notification cron job scheduled at $ { hours }: $ { minutes }
         );
     } catch (error) {
         console.error("Error initializing alpha email cron job:", error);
