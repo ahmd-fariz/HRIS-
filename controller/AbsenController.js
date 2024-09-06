@@ -340,18 +340,22 @@ OAuth2Client.setCredentials({
     refresh_token: process.env.GOOGLE_GMAIL_REFRESH_TOKEN,
 });
 
-const accessToken = await OAuth2Client.getAccessToken(); // Dapatkan access token secara langsung
+const accessToken = await OAuth2Client.getAccessToken();
+if (!accessToken.token) {
+    console.error("Failed to retrieve access token");
+} else {
+    console.log("Access token:", accessToken.token);
+}
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
         type: "OAuth2",
         user: process.env.EMAIL_USER,
-        pass: process.env.PASS_USER,
         clientId: process.env.GOOGLE_GMAIL_CLIENT_ID,
         clientSecret: process.env.GOOGLE_GMAIL_CLIENT_SECRET,
         refreshToken: process.env.GOOGLE_GMAIL_REFRESH_TOKEN,
-        accessToken: accessToken.token,
+        accessToken: process.env.GOOGLE_GMAIL_ACCESS_TOKEN,
     },
 });
 
@@ -361,11 +365,12 @@ const sendEmailWithRetry = async(mailOptions, retries = 3, delay = 30000) => {
         await transporter.sendMail(mailOptions);
         console.log(`Email sent to ${mailOptions.to}`);
     } catch (error) {
+        console.error(`Error sending email to ${mailOptions.to}: `, error.message);
         if (retries > 0) {
             console.log(`Retrying in ${delay / 1000} seconds...`);
             setTimeout(() => sendEmailWithRetry(mailOptions, retries - 1), delay);
         } else {
-            console.error(`Failed to send email to ${mailOptions.to}: `, error);
+            console.error(`Failed to send email to ${mailOptions.to} after multiple retries`);
         }
     }
 };
