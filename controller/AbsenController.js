@@ -406,10 +406,7 @@ const sendEmailsInBatch = async (users, batchSize = 10, delay = 30000) => {
         from: process.env.EMAIL_USER,
         to: user.email,
         subject: "Pengingat Kehadiran",
-        text: `Kepada ${user.name},\n\n
-        Anda telah ditandai sebagai 'Alpha' untuk hari ini. Harap pastikan untuk mematuhi kebijakan kehadiran.\n\n
-        Salam hormat,\n
-        PT. ${companyName}`,
+        text: `Kepada ${user.name},\n\nAnda telah ditandai sebagai 'Alpha' untuk hari ini. Harap pastikan untuk mematuhi kebijakan kehadiran.\n\nSalam hormat,\nPT. ${companyName}`,
       };
       return sendEmailWithRetry(mailOptions);
     });
