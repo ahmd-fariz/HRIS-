@@ -1,3 +1,4 @@
+import { API_Frontend } from "./api/api.js";
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -5,14 +6,15 @@ import db from "./config/Database.js";
 import FileUpload from "express-fileupload";
 import session from "express-session";
 import SequelizeStore from "connect-session-sequelize";
-import UserRoute from "./routes/UserRoute.js";
+// Bagian route
 import AbsenRoute from "./routes/AbsenRoute.js";
+import AlphaRoute from "./routes/AlphaRoute.js";
 import AuthRoute from "./routes/AuthRoute.js";
+import HariLiburRoute from "./routes/HariLiburRoute.js";
+import RoleRoute from "./routes/RoleRoute.js";
 import SettingRoute from "./routes/SettingRoute.js";
 import SuratRoute from "./routes/SuratRoute.js";
-import RoleRoute from "./routes/RoleRoute.js";
-import AlphaRoute from "./routes/AlphaRoute.js";
-import HariLiburRoute from "./routes/HariLiburRoute.js";
+import UserRoute from "./routes/UserRoute.js";
 import dotenv from "dotenv";
 dotenv.config(); // Memuat variabel lingkungan dari file .env
 
@@ -47,26 +49,31 @@ app.use(
 app.use(
   cors({
     credentials: true, // Mengizinkan pengiriman kredensial seperti cookie
-    origin: ["http://localhost:3000"], // Mengizinkan akses dari kedua origin ini
+    origin: [API_Frontend],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
   })
 );
 
 app.use(express.json()); // Middleware untuk parsing JSON
 app.use(FileUpload()); // Middleware untuk menangani upload file
-app.use(express.static("public")); // Menyajikan file statis dari folder 'public'
-app.use(express.static("public/absen")); // Menyajikan file statis dari folder 'public/absen'
-app.use(express.static("public/geolocation")); // Menyajikan file statis dari folder 'public/absen'
+// Menyajikan file statis dari folder 'public'
+app.use(express.static("public"));
+app.use(express.static("public/absen"));
+app.use(express.static("public/geolocation"));
+app.use(express.static("public/images"));
+app.use(express.static("public/logo"));
+app.use(express.static("public/signature"));
 
 
 // Menggunakan route handler untuk berbagai rute
-app.use(UserRoute); // Rute untuk pengguna
 app.use(AbsenRoute); // Rute untuk absensi
+app.use(AlphaRoute); // Rute untuk alpha
 app.use(AuthRoute); // Rute untuk autentikasi
+app.use(HariLiburRoute); // Rute untuk hari libur
+app.use(RoleRoute); // Rute untuk role
 app.use(SettingRoute); // Rute untuk setting
 app.use(SuratRoute); // Rute untuk surat
-app.use(RoleRoute); // Rute untuk role
-app.use(AlphaRoute); // Rute untuk alpha
-app.use(HariLiburRoute); // Rute untuk hari libur
+app.use(UserRoute); // Rute untuk pengguna
 
 store.sync(); // Menyinkronkan tabel session dengan database
 
