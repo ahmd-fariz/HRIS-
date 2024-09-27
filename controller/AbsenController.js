@@ -102,6 +102,126 @@ export const createAbsen = async (req, res) => {
   }
 };
 
+// Function to update the checkout time
+export const AbsenKeluar = async (req, res) => {
+  const { userId, reason } = req.body;
+
+  console.log("Request received to update absen for userId:", userId);
+
+  const today = new Date();
+  const date = today.toISOString().split("T")[0];
+  const waktu_keluar = today.toLocaleTimeString("en-GB");
+
+  try {
+    const absen = await Absen.update(
+      { waktu_keluar, alasan: reason },
+      {
+        where: {
+          userId,
+          tanggal: date,
+        },
+      }
+    );
+
+    console.log("Absen Pulang:", absen);
+
+    res.status(200).json({ msg: "Berhasil Pulang", absen });
+  } catch (error) {
+    console.error("Error updating absen:", error);
+    res.status(500).json({ msg: error.message });
+  }
+};
+
+export const GeoLocation = async (req, res) => {
+  const { userId, lat, long, keterangan, alasan, foto } = req.body;
+
+  console.log("Request received to update absen for userId:", userId);
+
+  const today = new Date();
+  const date = today.toISOString().split("T")[0];
+  const waktu_datang = today.toLocaleTimeString("en-GB");
+
+  try {
+    // Pastikan foto ada dan berbentuk string
+    if (!foto) {
+      return res.status(400).json({ msg: "No file uploaded" });
+    }
+
+    // Ekstrak data base64 dan tipe gambar (ekstensi file)
+    const matches = foto.match(/^data:image\/(png|jpg|jpeg);base64,(.+)$/);
+    if (!matches) {
+      return res.status(422).json({ msg: "Invalid Image Data" });
+    }
+
+    const ext = matches[1]; // Ekstrak ekstensi (png/jpg/jpeg)
+    const base64Data = matches[2]; // Ekstrak data base64 gambar
+
+    // Generate nama file yang unik
+    const fileName = `${userId}-${Date.now()}.${ext}`;
+    const filePath = path.join("./public/geolocation", fileName); // Path untuk menyimpan file
+
+    // Konversi base64 menjadi buffer binary
+    const buffer = Buffer.from(base64Data, "base64");
+
+    // Tambahkan kode ini sebelum fs.writeFile
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true }); // Membuat folder jika belum ada
+    }
+
+    // Simpan buffer sebagai file di direktori yang ditentukan
+    fs.writeFile(filePath, buffer, async (err) => {
+      if (err) {
+        return res.status(500).json({ msg: err.message });
+      }
+
+      // Buat URL file gambar yang baru disimpan
+      const url = `${req.protocol}://${req.get(
+        "host"
+      )}/geolocation/${fileName}`;
+
+      try {
+        // Simpan data absen ke database
+        const absen = await Absen.create({
+          userId,
+          tanggal: date,
+          lat,
+          long,
+          waktu_datang,
+          keterangan,
+          foto: fileName,
+          url_foto: url,
+          alasan,
+        });
+
+        console.log("Absen Geolocation:", absen);
+        res.status(200).json({ msg: "Berhasil Update Geolocation", absen });
+      } catch (error) {
+        console.error("Error updating absen:", error);
+        res.status(500).json({ msg: error.message });
+      }
+    });
+  } catch (error) {
+    console.error("Error processing geolocation:", error);
+    res.status(500).json({ msg: error.message });
+  }
+};
+
+// Fungsi untuk mendapatkan detail pengguna berdasarkan userId untuk menampilkan persentase kehadiran selama sebulan
+export const GetPercentageUser = async (req, res) => {
+  try {
+    const response = await Absen.findAll({
+      attributes: ["userId", "tanggal", "keterangan"], // Mengambil atribut
+      where: {
+        userId: req.params.id, // Mencari pengguna berdasarkan id dari parameter route
+      },
+    });
+    res.status(200).json(response); // Mengirimkan respon dengan status 200 dan data pengguna dalam format JSON
+  } catch (error) {
+    res.status(500).json({ msg: error.message }); // Mengirimkan respon dengan status 500 dan pesan error jika terjadi kesalahan
+  }
+};
+
 // Function to check and mark absentees
 const checkAndMarkAbsentees = async () => {
   const now = new Date();
@@ -213,120 +333,6 @@ cron.schedule("* * * * *", checkAndMarkAbsentees);
 
 // Run the function once to initialize after truncate
 checkAndMarkAbsentees();
-
-// Function to update the checkout time
-export const AbsenKeluar = async (req, res) => {
-  const { userId, reason } = req.body;
-
-  console.log("Request received to update absen for userId:", userId);
-
-  const today = new Date();
-  const date = today.toISOString().split("T")[0];
-  const waktu_keluar = today.toLocaleTimeString("en-GB");
-
-  try {
-    const absen = await Absen.update(
-      { waktu_keluar, alasan: reason },
-      {
-        where: {
-          userId,
-          tanggal: date,
-        },
-      }
-    );
-
-    console.log("Absen Pulang:", absen);
-
-    res.status(200).json({ msg: "Berhasil Pulang", absen });
-  } catch (error) {
-    console.error("Error updating absen:", error);
-    res.status(500).json({ msg: error.message });
-  }
-};
-
-export const GeoLocation = async (req, res) => {
-  const { userId, lat, long, keterangan, alasan, foto } = req.body;
-
-  console.log("Request received to update absen for userId:", userId);
-
-  const today = new Date();
-  const date = today.toISOString().split("T")[0];
-  const waktu_datang = today.toLocaleTimeString("en-GB");
-
-  try {
-    // Pastikan foto ada dan berbentuk string
-    if (!foto) {
-      return res.status(400).json({ msg: "No file uploaded" });
-    }
-
-    // Ekstrak data base64 dan tipe gambar (ekstensi file)
-    const matches = foto.match(/^data:image\/(png|jpg|jpeg);base64,(.+)$/);
-    if (!matches) {
-      return res.status(422).json({ msg: "Invalid Image Data" });
-    }
-
-    const ext = matches[1]; // Ekstrak ekstensi (png/jpg/jpeg)
-    const base64Data = matches[2]; // Ekstrak data base64 gambar
-
-    // Generate nama file yang unik
-    const fileName = `${userId}-${Date.now()}.${ext}`;
-    const filePath = path.join("./public/geolocation", fileName); // Path untuk menyimpan file
-
-    // Konversi base64 menjadi buffer binary
-    const buffer = Buffer.from(base64Data, "base64");
-
-    // Simpan buffer sebagai file di direktori yang ditentukan
-    fs.writeFile(filePath, buffer, async (err) => {
-      if (err) {
-        return res.status(500).json({ msg: err.message });
-      }
-
-      // Buat URL file gambar yang baru disimpan
-      const url = `${req.protocol}://${req.get(
-        "host"
-      )}/geolocation/${fileName}`;
-
-      try {
-        // Simpan data absen ke database
-        const absen = await Absen.create({
-          userId,
-          tanggal: date,
-          lat,
-          long,
-          waktu_datang,
-          keterangan,
-          foto: fileName,
-          url_foto: url,
-          alasan,
-        });
-
-        console.log("Absen Geolocation:", absen);
-        res.status(200).json({ msg: "Berhasil Update Geolocation", absen });
-      } catch (error) {
-        console.error("Error updating absen:", error);
-        res.status(500).json({ msg: error.message });
-      }
-    });
-  } catch (error) {
-    console.error("Error processing geolocation:", error);
-    res.status(500).json({ msg: error.message });
-  }
-};
-
-// Fungsi untuk mendapatkan detail pengguna berdasarkan userId untuk menampilkan persentase kehadiran selama sebulan
-export const GetPercentageUser = async (req, res) => {
-  try {
-    const response = await Absen.findAll({
-      attributes: ["userId", "tanggal", "keterangan"], // Mengambil atribut
-      where: {
-        userId: req.params.id, // Mencari pengguna berdasarkan id dari parameter route
-      },
-    });
-    res.status(200).json(response); // Mengirimkan respon dengan status 200 dan data pengguna dalam format JSON
-  } catch (error) {
-    res.status(500).json({ msg: error.message }); // Mengirimkan respon dengan status 500 dan pesan error jika terjadi kesalahan
-  }
-};
 
 // Bagian untuk mengirimkan email, sangat rumit
 dotenv.config();

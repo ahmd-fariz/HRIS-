@@ -311,6 +311,12 @@ export const UpdateForFotoAbsen = async (req, res) => {
     if (fileSize > 5000000)
       return res.status(422).json({ msg: "Image must be less than 5 MB" }); // Mengirimkan respon dengan status 422 jika ukuran file melebihi 5 MB
 
+    // Tambahkan kode ini untuk memastikan folder ada
+    const dir = './public/absen';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true }); // Membuat folder jika belum ada
+    }
+
     // Simpan file baru ke direktori absensi
     file.mv(`./public/absen/${fileName}`, (err) => {
       if (err) return res.status(500).json({ msg: err.message }); // Mengirimkan respon dengan status 500 jika terjadi kesalahan saat memindahkan file
@@ -318,9 +324,7 @@ export const UpdateForFotoAbsen = async (req, res) => {
   }
 
   // Membuat URL file foto absensi baru
-  const url_foto_absen = `${req.protocol}://${req.get(
-    "host"
-  )}/absen/${fileName}`;
+  const url_foto_absen = `${req.protocol}://${req.get("host")}/absen/${fileName}`;
 
   try {
     await UserModel.update(
