@@ -176,9 +176,7 @@ export const GeoLocation = async (req, res) => {
       }
 
       // Buat URL file gambar yang baru disimpan
-      const url = `${req.protocol}://${req.get(
-        "host"
-      )}/geolocation/${fileName}`;
+      const url = `${req.protocol}://${req.get("host")}/geolocation/${fileName}`;
 
       try {
         // Simpan data absen ke database
