@@ -1,4 +1,4 @@
-import { API_Frontend } from "./api/api.js";
+import { API_Backend, API_Frontend } from "./api/api.js";
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -49,7 +49,7 @@ app.use(
 app.use(
   cors({
     credentials: true, // Mengizinkan pengiriman kredensial seperti cookie
-    origin: [API_Frontend],
+    origin: [API_Frontend, API_Backend],
     methods: ["GET", "POST", "PATCH", "DELETE"],
   })
 );
