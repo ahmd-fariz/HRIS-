@@ -16,23 +16,10 @@ import SettingRoute from "./routes/SettingRoute.js";
 import SuratRoute from "./routes/SuratRoute.js";
 import UserRoute from "./routes/UserRoute.js";
 import dotenv from "dotenv";
-dotenv.config(); // Memuat variabel lingkungan dari file .env
 
 const app = express(); // Membuat aplikasi Express
 
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-
-const sessionStore = SequelizeStore(session.Store); // Mengonfigurasi session store untuk Sequelize
-
-const store = new sessionStore({
-  db: db, // Menghubungkan session store dengan database
-});
-
-// simple route
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to Hris Gmt application." });
-});
+app.use(cors());
 
 (async () => {
   await db.sync();
@@ -50,14 +37,14 @@ app.use(
     },
   })
 );
+
 // Konfigurasi middleware CORS
-app.use(
-  cors({
-    credentials: true,
-    origin: ['https://hris.grageweb.online'], // Tambahkan URL frontend yang benar
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-  })
-);
+const corsOptions = {
+  origin: ["https://hris.grageweb.online"],
+};
+
+app.use(cors(corsOptions));
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "https://hris.grageweb.online"); // Ubah URL jika perlu
   res.header(
@@ -69,7 +56,24 @@ app.use((req, res, next) => {
   next();
 });
 
+dotenv.config(); // Memuat variabel lingkungan dari file .env
+
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+const sessionStore = SequelizeStore(session.Store); // Mengonfigurasi session store untuk Sequelize
+
+const store = new sessionStore({
+  db: db, // Menghubungkan session store dengan database
+});
+
+// simple route
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to Hris Gmt application." });
+});
+
 app.use(express.json()); // Middleware untuk parsing JSON
+app.use(express.urlencoded({ extended: true }));
 app.use(FileUpload()); // Middleware untuk menangani upload file
 // Menyajikan file statis dari folder 'public'
 app.use(express.static("public"));
