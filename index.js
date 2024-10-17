@@ -6,6 +6,8 @@ import db from "./config/Database.js";
 import FileUpload from "express-fileupload";
 import session from "express-session";
 import SequelizeStore from "connect-session-sequelize";
+import dotenv from "dotenv";
+
 // Bagian route
 import AbsenRoute from "./routes/AbsenRoute.js";
 import AlphaRoute from "./routes/AlphaRoute.js";
@@ -15,11 +17,40 @@ import RoleRoute from "./routes/RoleRoute.js";
 import SettingRoute from "./routes/SettingRoute.js";
 import SuratRoute from "./routes/SuratRoute.js";
 import UserRoute from "./routes/UserRoute.js";
-import dotenv from "dotenv";
 
+dotenv.config(); // Memuat variabel lingkungan dari file .env
 const app = express(); // Membuat aplikasi Express
 
-app.use(cors());
+// Konfigurasi middleware CORS
+const corsOptions = {
+  origin: ["https://hris.grageweb.online"],
+};
+
+app.use(cors(corsOptions));
+
+// CORS headers logging
+app.use((req, res, next) => {
+  console.log("CORS Headers Applied");
+  next();
+});
+
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json()); // Middleware untuk parsing JSON
+app.use(express.urlencoded({ extended: true }));
+app.use(FileUpload()); // Middleware untuk menangani upload file
+// Menyajikan file statis dari folder 'public'
+app.use(express.static("public"));
+app.use(express.static("public/absen"));
+app.use(express.static("public/geolocation"));
+app.use(express.static("public/images"));
+app.use(express.static("public/logo"));
+app.use(express.static("public/signature"));
+const sessionStore = SequelizeStore(session.Store); // Mengonfigurasi session store untuk Sequelize
+
+const store = new sessionStore({
+  db: db, // Menghubungkan session store dengan database
+});
 
 (async () => {
   await db.sync();
@@ -38,58 +69,13 @@ app.use(
   })
 );
 
-// Konfigurasi middleware CORS
-const corsOptions = {
-  origin: ["https://hris.grageweb.online"],
-};
-
-app.use(cors(corsOptions));
-
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://hris.grageweb.online"); // Ubah URL jika perlu
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-});
-
-app.use((req, res, next) => {
-  console.log("CORS Headers Applied");
-  next();
-});
-
-app.options('*', cors());
-
-dotenv.config(); // Memuat variabel lingkungan dari file .env
-
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-
-const sessionStore = SequelizeStore(session.Store); // Mengonfigurasi session store untuk Sequelize
-
-const store = new sessionStore({
-  db: db, // Menghubungkan session store dengan database
-});
 
 // simple route
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to Hris Gmt application." });
 });
 
-app.use(express.json()); // Middleware untuk parsing JSON
-app.use(express.urlencoded({ extended: true }));
-app.use(FileUpload()); // Middleware untuk menangani upload file
-// Menyajikan file statis dari folder 'public'
-app.use(express.static("public"));
-app.use(express.static("public/absen"));
-app.use(express.static("public/geolocation"));
-app.use(express.static("public/images"));
-app.use(express.static("public/logo"));
-app.use(express.static("public/signature"));
-
+app.options('*', cors());
 
 // Menggunakan route handler untuk berbagai rute
 app.use(AbsenRoute); // Rute untuk absensi
@@ -101,10 +87,9 @@ app.use(SettingRoute); // Rute untuk setting
 app.use(SuratRoute); // Rute untuk surat
 app.use(UserRoute); // Rute untuk pengguna
 
-store.sync(); // Menyinkronkan tabel session dengan database
-
-const PORT = process.env.APP_PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+store.sync().then(() => {
+  const PORT = process.env.APP_PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
 });
-
