@@ -29,6 +29,11 @@ const store = new sessionStore({
   db: db, // Menghubungkan session store dengan database
 });
 
+// simple route
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to Hris Gmt application." });
+});
+
 (async () => {
   await db.sync();
 })();
