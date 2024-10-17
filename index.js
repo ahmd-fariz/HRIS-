@@ -34,17 +34,17 @@ const store = new sessionStore({
 })();
 
 // Konfigurasi middleware session
-// app.use(
-//   session({
-//     secret: process.env.SESS_SECRET, // Kunci rahasia untuk enkripsi sesi
-//     resave: false, // Tidak menyimpan ulang sesi yang tidak berubah
-//     saveUninitialized: true, // Menyimpan sesi baru yang belum diinisialisasi
-//     store: store, // Menyimpan sesi di database menggunakan Sequelize store
-//     cookie: {
-//       secure: "auto", // Mengatur cookie agar hanya dikirim melalui HTTPS (otomatis tergantung pada lingkungan)
-//     },
-//   })
-// );
+app.use(
+  session({
+    secret: process.env.SESS_SECRET, // Kunci rahasia untuk enkripsi sesi
+    resave: false, // Tidak menyimpan ulang sesi yang tidak berubah
+    saveUninitialized: true, // Menyimpan sesi baru yang belum diinisialisasi
+    store: store, // Menyimpan sesi di database menggunakan Sequelize store
+    cookie: {
+      secure: "auto", // Mengatur cookie agar hanya dikirim melalui HTTPS (otomatis tergantung pada lingkungan)
+    },
+  })
+);
 // Konfigurasi middleware CORS
 app.use(
   cors({
