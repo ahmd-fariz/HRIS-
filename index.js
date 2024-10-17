@@ -103,6 +103,8 @@ app.use(UserRoute); // Rute untuk pengguna
 
 store.sync(); // Menyinkronkan tabel session dengan database
 
-app.listen(process.env.APP_PORT, "0.0.0.0", () => {
-  console.log("Server up and Running...."); // Menjalankan server pada port yang ditentukan
+const PORT = process.env.APP_PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
+
