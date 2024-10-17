@@ -1,4 +1,4 @@
-import { API_Backend, API_Frontend } from "./api/api.js";
+import { API_Frontend } from "./api/api.js";
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -48,11 +48,21 @@ app.use(
 // Konfigurasi middleware CORS
 app.use(
   cors({
-    credentials: true, // Mengizinkan pengiriman kredensial seperti cookie
-    origin: [API_Frontend],
+    credentials: true,
+    origin: ['https://hris.grageweb.online'], // Tambahkan URL frontend yang benar
     methods: ["GET", "POST", "PATCH", "DELETE"],
   })
 );
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://hris.grageweb.online"); // Ubah URL jika perlu
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
 
 app.use(express.json()); // Middleware untuk parsing JSON
 app.use(FileUpload()); // Middleware untuk menangani upload file
