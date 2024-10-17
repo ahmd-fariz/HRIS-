@@ -56,6 +56,13 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  console.log("CORS Headers Applied");
+  next();
+});
+
+app.options('*', cors());
+
 dotenv.config(); // Memuat variabel lingkungan dari file .env
 
 app.use(bodyParser.json({ limit: '50mb' }));
