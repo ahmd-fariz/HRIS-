@@ -1,21 +1,21 @@
 // Yang ini nanti dulu
-// import { Sequelize } from "sequelize";
-
-// const db = new Sequelize("u610515881_hris", "u610515881_hris", "HrisGMT@1", {
-//   host: "153.92.15.8",
-//   port: "3306",
-//   dialect: "mysql",
-// });
-
-// export default db;
-
 import { Sequelize } from "sequelize";
 
-const db = new Sequelize("hairis", "root", "", {
-  host: "localhost",
+const db = new Sequelize("u610515881_hris", "u610515881_hris", "HrisGMT@1", {
+  host: "153.92.15.8",
   port: "3306",
   dialect: "mysql",
 });
 
 export default db;
+
+// import { Sequelize } from "sequelize";
+
+// const db = new Sequelize("hairis", "root", "", {
+//   host: "localhost",
+//   port: "3306",
+//   dialect: "mysql",
+// });
+
+// export default db;
 
