@@ -20,6 +20,11 @@ import UserRoute from "./routes/UserRoute.js";
 
 const app = express(); // Membuat aplikasi Express
 
+// simple route
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to Hris Gmt application." });
+});
+
 // Simpen dulu barkal kepake
 // app.use(bodyParser.json({ limit: "50mb" }));
 // app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
@@ -57,11 +62,6 @@ app.options('*', cors(corsOptions)); // Menangani permintaan OPTIONS untuk semua
 app.use(express.json()); // Middleware untuk parsing JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(FileUpload()); // Middleware untuk menangani upload file
-
-// simple route
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to Hris Gmt application." });
-});
 
 // Menggunakan route handler untuk berbagai rute
 app.use(AbsenRoute); // Rute untuk absensi
