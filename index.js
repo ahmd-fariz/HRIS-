@@ -46,9 +46,13 @@ db.sequelize
 // Konfigurasi middleware CORS
 const corsOptions = {
   origin: ["https://hris.grageweb.online", "http://localhost:3001"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // Tambahkan metode yang diizinkan
+  allowedHeaders: ["Content-Type", "Authorization"], // Tambahkan header yang diizinkan
 };
 
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); // Pastikan ini diterapkan sebelum rute lainnya
+
+app.options('*', cors(corsOptions)); // Menangani permintaan OPTIONS untuk semua rute
 
 app.use(express.json()); // Middleware untuk parsing JSON
 app.use(express.urlencoded({ extended: true }));
