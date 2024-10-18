@@ -20,11 +20,18 @@ import UserRoute from "./routes/UserRoute.js";
 
 const app = express(); // Membuat aplikasi Express
 
-// simple route
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to Hris Gmt application." });
-});
+// Konfigurasi middleware CORS
+const corsOptions = {
+  origin: ["*"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // Tambahkan metode yang diizinkan
+  allowedHeaders: ["Content-Type", "Authorization"], // Tambahkan header yang diizinkan
+};
 
+app.use(cors(corsOptions)); // Pastikan ini diterapkan sebelum rute lainnya
+
+app.use(express.json()); // Middleware untuk parsing JSON
+app.use(express.urlencoded({ extended: true }));
+app.use(FileUpload()); // Middleware untuk menangani upload file
 // Simpen dulu barkal kepake
 // app.use(bodyParser.json({ limit: "50mb" }));
 // app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
@@ -35,33 +42,6 @@ app.use(express.static("public/geolocation"));
 app.use(express.static("public/images"));
 app.use(express.static("public/logo"));
 app.use(express.static("public/signature"));
-app.use(cors());
-
-dotenv.config(); // Memuat variabel lingkungan dari file .env
-
-db.sequelize
-  .sync()
-  .then(() => {
-    console.log("Synced db.");
-  })
-  .catch((err) => {
-    console.log("Failed to sync db: " + err.message);
-  });
-
-// Konfigurasi middleware CORS
-const corsOptions = {
-  origin: ["https://hris.grageweb.online", "http://localhost:3001"],
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // Tambahkan metode yang diizinkan
-  allowedHeaders: ["Content-Type", "Authorization"], // Tambahkan header yang diizinkan
-};
-
-app.use(cors(corsOptions)); // Pastikan ini diterapkan sebelum rute lainnya
-
-app.options('*', cors(corsOptions)); // Menangani permintaan OPTIONS untuk semua rute
-
-app.use(express.json()); // Middleware untuk parsing JSON
-app.use(express.urlencoded({ extended: true }));
-app.use(FileUpload()); // Middleware untuk menangani upload file
 
 // Menggunakan route handler untuk berbagai rute
 app.use(AbsenRoute); // Rute untuk absensi
@@ -73,11 +53,26 @@ app.use(SettingRoute); // Rute untuk setting
 app.use(SuratRoute); // Rute untuk surat
 app.use(UserRoute); // Rute untuk pengguna
 
+// simple route
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to Hris Gmt application." });
+});
+
+dotenv.config(); // Memuat variabel lingkungan dari file .env
+
+db.sequelize
+  .sync()
+  .then(() => {
+    console.log("Synced db.");
+  })
+  .catch((err) => {
+    console.log("Failed to sync db: " + err.message);
+  });
+  
 const PORT = process.env.APP_PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
 // Simpen dulu barkal kepake
 // const sessionStore = SequelizeStore(session.Store); // Mengonfigurasi session store untuk Sequelize
 
