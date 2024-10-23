@@ -1,9 +1,10 @@
-import express from "express";
 // Buat email dan jalan otomatis
 import nodemailer from "nodemailer";
 import cron from "node-cron";
 import dotenv from "dotenv";
-
+// Buat email dan jalan otomatis
+import { API_Backend } from "../api/api.js";
+import express from "express";
 import { Sequelize } from "sequelize";
 import fs from "fs";
 import path from "path";
@@ -176,7 +177,7 @@ export const GeoLocation = async (req, res) => {
       }
 
       // Buat URL file gambar yang baru disimpan
-      const url = `${req.protocol}://${req.get("host")}/geolocation/${fileName}`;
+      const url = `${API_Backend}/geolocation/${fileName}`;
 
       try {
         // Simpan data absen ke database

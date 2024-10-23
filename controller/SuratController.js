@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs";
 import Surat from "../models/Surat.js";
+import { API_Backend } from "../api/api.js";
 
 // Fungsi untuk membuat surat baru
 export const createSurat = async (req, res) => {
@@ -45,7 +46,7 @@ export const createSurat = async (req, res) => {
 
       // Save new file
       await file.mv(uploadPath);
-      url = `${req.protocol}://${req.get("host")}/logo/${logo}`;
+      url = `${API_Backend}/logo/${logo}`;
     }
 
     // Handle file upload for signature
@@ -66,7 +67,7 @@ export const createSurat = async (req, res) => {
 
       // Save new file
       await file.mv(uploadPath);
-      url_signature = `${req.protocol}://${req.get("host")}/signature/${signature}`;
+      url_signature = `${API_Backend}/signature/${signature}`;
     }
     
     const newSurat = await Surat.create({
@@ -140,7 +141,7 @@ export const updateSurat = async (req, res) => {
       fileName = surat.logo; // Keep old logo if no new logo is uploaded
     }
 
-    const url = `${req.protocol}://${req.get("host")}/logo/${fileName}`;
+    const url = `${API_Backend}/logo/${fileName}`; // Update logo URL
 
     // Handle file upload for signature
     if (req.files && req.files.signature) {
@@ -172,7 +173,7 @@ export const updateSurat = async (req, res) => {
       signatureFile = surat.signature; // Keep old signature if no new signature is uploaded
     }
 
-    const url_signature = `${req.protocol}://${req.get("host")}/signature/${signatureFile}`;
+    const url_signature = `${API_Backend}/signature/${signatureFile}`; // Update signature URL
 
     // Update surat
     await Surat.update(

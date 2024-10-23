@@ -166,7 +166,7 @@ export const UpdateUser = async (req, res) => {
     });
   }
 
-  const url = `${req.protocol}://${req.get("host")}/images/${fileName}`; // Membuat URL file gambar baru
+  const url = `${API_Backend}/images/${fileName}`; // Membuat URL file gambar baru
 
   if (password && password !== user.password) {
     // Jika ada perubahan password
@@ -240,7 +240,7 @@ export const UpdatePotoProfile = async (req, res) => {
   }
 
   // Membuat URL file gambar baru
-  const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
+  const url = `${API_Backend}/images/${fileName}`;
   try {
     await UserModel.update(
       {
@@ -298,7 +298,7 @@ export const UpdateForFotoAbsen = async (req, res) => {
   }
 
   // Membuat URL file foto absensi baru
-  const url_foto_absen = `${req.protocol}://${req.get("host")}/absen/${fileName}`;
+  const url_foto_absen = `${API_Backend}/absen/${fileName}`;
 
   try {
     await UserModel.update(
