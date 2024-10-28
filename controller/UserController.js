@@ -13,6 +13,9 @@ export const CreateUser = async (req, res) => {
       .status(400)
       .json({ msg: "Password Dan Confirm Password Tidak Cocok" }); // Mengirimkan respon dengan status 400 jika password dan confirm password tidak cocok
 
+  if (password.length < 8)
+    return res.status(400).json({ msg: "Password harus minimal 8 karakter" }); // Mengirimkan respon dengan status 400 jika password kurang dari 8 karakter
+
   const hashPassword = await argon2.hash(password); // Meng-hash password menggunakan argon2
 
   // Mengambil file yang diunggah
@@ -373,3 +376,4 @@ export const DeleteUser = async (req, res) => {
     res.status(400).json({ msg: error.message }); // Mengirimkan respon dengan status 400 jika terjadi kesalahan saat menghapus data
   }
 };
+
