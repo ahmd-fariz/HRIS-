@@ -29,18 +29,7 @@ export const GetAbsens = async (req, res) => {
           attributes: ["nama_role"],
         },
       },
-      attributes: [
-        "userId",
-        "tanggal",
-        "waktu_datang",
-        "waktu_keluar",
-        "lat",
-        "long",
-        "foto",
-        "url_foto",
-        "keterangan",
-        "alasan",
-      ],
+      attributes: ["userId", "tanggal", "waktu_datang", "waktu_keluar", "lat", "long", "foto", "url_foto", "keterangan", "alasan"],
     });
 
     res.status(200).json(response);
@@ -51,15 +40,17 @@ export const GetAbsens = async (req, res) => {
 
 // Function to create new attendance record
 export const createAbsen = async (req, res) => {
-  const { userId, lat, long } = req.body;
+  const { userId, lat, long, keterangan } = req.body; // Pastikan `keterangan` ikut diterima jika ada
 
   console.log("Request received to create absen for userId:", userId);
 
-  const today = new Date();
-  const date = today.toISOString().split("T")[0];
-  const waktu_datang = today.toLocaleTimeString("en-GB");
+  // Ambil tanggal dan waktu lokal dari server
+  const now = new Date();
+  const date = now.toISOString().split("T")[0]; // Tanggal dalam format YYYY-MM-DD (UTC)
+  const waktu_datang = now.toLocaleTimeString("en-GB"); // Waktu dalam format hh:mm:ss (lokal)
 
   try {
+    // Periksa apakah user sudah absen pada hari ini
     const existingAbsen = await Absen.findOne({
       where: {
         userId,
@@ -68,38 +59,48 @@ export const createAbsen = async (req, res) => {
     });
 
     if (existingAbsen) {
+      console.log(`User ${userId} sudah absen pada ${date}.`);
       return res.status(400).json({ msg: "User sudah absen hari ini." });
     }
 
+    // Buat record baru untuk absen
     const absen = await Absen.create({
       userId,
       tanggal: date,
       lat,
       long,
       waktu_datang,
-      keterangan: "Hadir",
+      keterangan: keterangan || "Hadir", // Default keterangan adalah "Hadir"
     });
 
-    console.log("Absen created:", absen);
+    console.log("Absen berhasil dibuat:", absen);
 
-    res.status(201).json({ msg: "Absen berhasil dibuat", absen });
+    // Buat data absen untuk pengiriman email (jika diperlukan)
+    const absenData = {
+      userId,
+      keterangan: keterangan || "Hadir", // Gunakan nilai default jika tidak ada
+      tanggal: date,
+    };
+
+    // Jika keterangan adalah "Alpha", kirim email
+    if (absenData.keterangan.toLowerCase() === "alpha") {
+      try {
+        await saveAbsenAndSendEmail(absenData);
+        console.log(`Email sent for Alpha userId: ${userId}`);
+      } catch (emailError) {
+        console.error("Error sending email:", emailError.message);
+        // Tidak perlu gagal seluruh proses jika email gagal
+      }
+    }
+
+    // Respons berhasil
+    return res.status(201).json({
+      msg: "Absen berhasil dibuat",
+      absen,
+    });
   } catch (error) {
-    console.error("Error creating absen:", error);
-    res.status(500).json({ msg: error.message });
-  }
-
-  // Buat mengirim email
-  const absenData = {
-    userId: req.body.userId,
-    keterangan: req.body.keterangan, // "Alpha" atau lainnya
-    tanggal: new Date().toISOString().split("T")[0], // Tanggal hari ini
-  };
-
-  try {
-    await saveAbsenAndSendEmail(absenData);
-    res.status(201).json({ message: "Absen saved and email sent if Alpha." });
-  } catch (error) {
-    res.status(500).json({ message: "Error saving absen or sending email." });
+    console.error("Error creating absen:", error.message);
+    return res.status(500).json({ msg: "Terjadi kesalahan pada server." });
   }
 };
 
@@ -121,7 +122,7 @@ export const AbsenKeluar = async (req, res) => {
           userId,
           tanggal: date,
         },
-      }
+      },
     );
 
     console.log("Absen Pulang:", absen);
@@ -241,13 +242,8 @@ const checkAndMarkAbsentees = async () => {
     const [hours, minutes] = jamAlpha.split(":").map(Number);
 
     // Compare current time with jam_alpha
-    if (
-      now.getHours() < hours ||
-      (now.getHours() === hours && now.getMinutes() < minutes)
-    ) {
-      console.log(
-        "Current time has not exceeded jam_alpha, skipping the check."
-      );
+    if (now.getHours() < hours || (now.getHours() === hours && now.getMinutes() < minutes)) {
+      console.log("Current time has not exceeded jam_alpha, skipping the check.");
       return;
     }
 
@@ -259,9 +255,7 @@ const checkAndMarkAbsentees = async () => {
     });
 
     if (isHoliday) {
-      console.log(
-        `Today (${date}) is a holiday (${isHoliday.nama_libur}), no absentees will be marked.`
-      );
+      console.log(`Today (${date}) is a holiday (${isHoliday.nama_libur}), no absentees will be marked.`);
       return;
     }
 
@@ -299,9 +293,7 @@ const checkAndMarkAbsentees = async () => {
     const presentUserIds = presentUsers.map((absen) => absen.userId);
 
     // Find user IDs who have not checked in today
-    const absentUserIds = allUserIds.filter(
-      (userId) => !presentUserIds.includes(userId)
-    );
+    const absentUserIds = allUserIds.filter((userId) => !presentUserIds.includes(userId));
 
     console.log(`Absent users for ${date}:`, absentUserIds);
 
@@ -356,9 +348,7 @@ const sendEmailWithRetry = async (mailOptions, retries = 3, delay = 30000) => {
       console.log(`Retrying in ${delay / 1000} seconds...`);
       setTimeout(() => sendEmailWithRetry(mailOptions, retries - 1), delay);
     } else {
-      console.error(
-        `Failed to send email to ${mailOptions.to} after multiple retries`
-      );
+      console.error(`Failed to send email to ${mailOptions.to} after multiple retries`);
     }
   }
 };
@@ -400,9 +390,7 @@ const sendEmailsInBatch = async (users, batchSize = 10, delay = 30000) => {
   });
 
   // Pastikan untuk mengambil nama perusahaan dari objek
-  const companyName = company
-    ? company.nama_perusahaan
-    : "Perusahaan Tidak Diketahui";
+  const companyName = company ? company.nama_perusahaan : "Perusahaan Tidak Diketahui";
 
   for (let i = 0; i < users.length; i += batchSize) {
     const batch = users.slice(i, i + batchSize);
